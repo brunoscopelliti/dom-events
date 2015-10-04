@@ -1,0 +1,8 @@
+/.idea
+/node_modules
+/jspm_packages
+/coverage
+/doc
+/tests/sauce.json
+
+*.tmp.*

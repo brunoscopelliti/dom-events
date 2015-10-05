@@ -26,5 +26,8 @@ test("Events' interface", function (assert) {
  * @description module's interface conformance
  */
 test("EventsStore's interface", function (assert) {
-    _.typeFn(Store, "Store");
+    _.typeFn(Store.get, "Store.get");
+    _.typeFn(Store.add, "Store.add");
+    _.typeFn(Store.del, "Store.del");
+    _.typeFn(Store.run, "Store.run");
 });

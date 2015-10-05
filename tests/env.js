@@ -7,6 +7,10 @@ var _ = (function() {
 
     var assert = QUnit.assert;
 
+    var dict_ = {
+        once: "${who} should be called only one time [called ${n}]",
+        never: "${who} should be never called [called ${n}]"
+    };
     function type(subject, subjectName, expectedType){
         assert.equal(typeof subject, expectedType, subjectName + " is " + expectedType);
     };
@@ -16,10 +20,21 @@ var _ = (function() {
     };
 
 
-    var exports_ = {
-        typeFn: typeFunction
+    function one(subjectName, callNumber){
+        return dict_.once.replace("${who}", subjectName).replace("${n}", callNumber);
     };
 
+    function none(subjectName, callNumber){
+        return dict_.never.replace("${who}", subjectName).replace("${n}", callNumber);
+    };
+
+
+
+    var exports_ = {
+        one: one,
+        none: none,
+        typeFn: typeFunction,
+    };
 
     return exports_;
 

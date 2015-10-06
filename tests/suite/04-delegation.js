@@ -97,4 +97,23 @@ test("[DEL3] delegate event listener on the document", function (assert) {
 
 });
 
+// @bug https://bugzilla.mozilla.org/show_bug.cgi?id=218093
+// @description if the target is contained by a disabled element, the event in Firefox does not bubble up
+// @demo http://codepen.io/brunoscopelliti/pen/dYGbWz
+test("[DEL4] delegator is disabled", function (assert) {
+
+    var spyBtn = sinon.spy();
+    var spyChild = sinon.spy();
+    var boundEl = $$("#btn-row");
+    var clickedEl = $$("#btn span")[0];
+
+    Events.on(boundEl, "click", "#child", spyChild);
+    Events.on(boundEl, "click", "#btn", spyBtn);
+
+    trigger(clickedEl, "click");
+
+    assert.ok(!spyBtn.called, _.none("Event handler", spyBtn.callCount));
+    assert.ok(spyChild.calledOnce, _.one("Event handler", spyChild.callCount));
+
+});
 });

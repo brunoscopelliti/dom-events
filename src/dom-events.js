@@ -8,6 +8,36 @@
  */
 
 
+
+
+/**
+ * @name match_
+ * @private
+ * @description
+ * Determine if the element would be selected by the specified selector string
+ * @todo
+ *
+ * @param {HTMLElement}
+ * @param {String} selector
+ * @return {Boolean}
+ */
+var match_ = (function(el) {
+    var matcher = el.matches || el.webkitMatchesSelector || el.mozMatchesSelector || el.msMatchesSelector || el.oMatchesSelector;
+
+    return function(elem, selector) {
+        if (isWindow_(elem)){
+            return selector == "window";
+        }
+        if (elem == document){
+            return selector == "document";
+        }
+        return matcher.call(elem, selector);
+    };
+}(document.body));
+
+
+
+
 /**
  * @name Store
  *
@@ -134,6 +164,12 @@ var Store = (function() {
         eventObj.delegator = delegator;
 
         /**
+         * {HTMLElement} delegatorEl
+         * the delegator element on which the event occurred
+         */
+        eventObj.delegatorEl = null;
+
+        /**
          * {String} type
          * the event name
          */
@@ -256,6 +292,112 @@ var Store = (function() {
     }
 
 }());
+/**
+ * @name domUp_
+ * @private
+ * @description
+ * Executes the provided function for each dom element starting from startEl,
+ * till stopEl (default window).
+ * If the callback return false, the execution is interrupted.
+ *
+ * @param {HTMLElement} startEl: html element from which the climb the DOM tree starts
+ * @param {HTMLElement} stopEl: html element on which the DOM traversing should be interrupted
+ * @param {Function} func: function executed for each element; receives the current element as paramenter
+ * @return {void}
+ */
+function domUp_(startEl, stopEl, func){
+
+    if (typeof stopEl == "function"){
+        [func, stopEl] = [stopEl, window];
+    }
+
+    let visitorEl = startEl;
+    let repeat = true;
+
+    do {
+        repeat = func.call(visitorEl, visitorEl);
+    } while(repeat !== false && visitorEl != stopEl && (visitorEl = visitorEl.parentNode));
+
+}
+
+
+/**
+ * @name prepareEventHandlers_
+ * @private
+ * @description
+ * Prepare and sort the event handlers list;
+ * delegated events are always executed before directly bound event
+ * @todo
+ *
+ *
+ * @param {HTMLElement} event: the event object
+ * @return {Array} event handlers sorted list
+ */
+function prepareEventHandlers_(event) {
+
+    var sortedHandlers = [];
+
+    // all the events (both delegates, both directly bound)
+    // registered on the event current target
+    var eventObjs = Store.get(event.currentTarget, event.type);
+
+    // here we're rising the DOM tree, starting from the target element,
+    // till we reach the element on which the event was bound.
+    // for each element we check if is is the "delegator" of a registered event;
+    // in this case the the corresponding handler object is added to the list of those which will be executed.
+    domUp_(event.target, event.currentTarget, function(currElem) {
+
+        if (!currElem.disabled || event.type !== "click"){
+            eventObjs.forEach(function findMatchOnTheCurrentNode_(eventObj) {
+
+                if (!eventObj.delegate || (eventObj.delegate && !contains_(currElem, eventObj.delegator))){
+                    // in case the element on which the event was triggered does not contain the delegator
+                    // exit soon
+                    return;
+                }
+
+                if (match_(currElem, eventObj.delegator)) {
+
+                    eventObj.delegatorEl = currElem;
+
+                    sortedHandlers.push(eventObj);
+                }
+            });
+        }
+
+    });
+
+    // ... then add the directly bound events
+    return sortedHandlers.concat(...eventObjs.filter(x => !x.delegate));
+
+}
+
+
+/**
+ * @name dispatch_
+ * @private
+ * @description
+ * Is the function used as handler for the event listener;
+ * it controls the execution of all the listeners for the current event.
+ *
+ * @param {Object} evt: the real event object
+ *
+ * @returns {void}
+ */
+function dispatch_(evt){
+
+    var boundElem = this;
+    var evtTarget = evt.target;
+
+    var listeners = prepareEventHandlers_(evt); // Store.get(boundElem, evt.type);
+
+
+
+    listeners.forEach(function(listener) {
+        listener.originalEvent = evt;
+        listener.handler.call(listener.delegatorEl || evtTarget, listener);
+    })
+
 }
 
 
@@ -267,28 +409,109 @@ var DOMEvents = {
     /**
      * @name debug
      * @function
+     * @memberOf DOMEvents
      */
     debug: function debug() {},
 
     /**
      * @name on
      * @function
+     * @memberOf DOMEvents
+     * @description
+     * Add an event listener on the dom elements passed as parameter.
+     *
+     * @param {HTMLElement|HTMLCollection|NodeList} htmlElements: html elements for which the event listener will be set
+     * @param {String} type: the name of the event
+     * @param {String} delegator: the selector of the elements which should react on the event
+     * @param {Function} handler: the function that should be called when the event is triggered
+     * @return {void}
      */
-    on: function on(){},
+    on: function on(htmlElements, type, delegator, handler){
+
+        // normalize arguments
+        var boundElems = toArray_(htmlElements);
+
+        if (typeof handler == "undefined"){
+            [handler, delegator] = [delegator, handler];
+        }
+
+        boundElems.forEach(function(boundEl){
+            Store.add(boundEl, type, delegator, handler);
+        });
+
+    },
 
     /**
      * @name off
      * @function
+     * @memberOf DOMEvents
      */
     off: function off() {},
 
     /**
      * @name fire
      * @function
+     * @memberOf DOMEvents
      */
     fire: function fire() {}
 
 };
+
+
+
+/**
+ * @name toArray_
+ * @private
+ * @description
+ * Returns the html element(s) it receives as arguments as an array
+ *
+ * @param {Any} htmlElements: @todo
+ * @return {Array}
+ */
+function toArray_(htmlElements) {
+    if (htmlElements == null) {
+        return [];
+    }
+    if (isWindow_(htmlElements) || typeof htmlElements.length == "undefined") {
+        return [htmlElements];
+    }
+    return Array.from(htmlElements);
+}
+
+
+/**
+ * @name isWindow_
+ * @private
+ * @description
+ * Return true if the parameter is the browser global object, window
+ *
+ * @param {Any} obj
+ * @return {Boolean}
+ */
+function isWindow_(obj){
+    return obj === window;
+}
+
+
+/**
+ * @name contains_
+ * @private
+ * @description
+ * Returns a Boolean value indicating whether 'contained' is a descendant of 'container'.
+ * When 'strictly' is falsy, 'contained' is considered a descendant of 'container' even if they are the same element.
+ *
+ * @param {HTMLElement} container
+ * @param {HTMLElement|String} contained
+ * @param {Boolean} strictly: when container = contained, define if contains_ should return true or false
+ * @return {Boolean}
+ */
+function contains_(container, contained, strictly){
+    if (typeof contained == "string"){
+        let box = strictly ? container : container.parentNode || document;
+        return box.querySelectorAll(contained).length > 0;
+    }
+    return (!strictly || container !== contained) && container.contains(contained);
+}
 
 
 export default DOMEvents;

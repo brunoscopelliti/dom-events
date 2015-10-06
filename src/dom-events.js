@@ -345,21 +345,19 @@ function domUp_(startEl, stopEl, func){
 }
 
 
+
 /**
- * @name prepareEventHandlers_
+ * @name dispatch_
  * @private
  * @description
- * Prepare and sort the event handlers list;
- * delegated events are always executed before directly bound event
- * @todo
+ * Is the function used as handler for the event listener;
+ * it controls the execution of all the listeners for the current event.
  *
+ * @param {Object} evt: the real event object
  *
- * @param {HTMLElement} event: the event object
- * @return {Array} event handlers sorted list
+ * @returns {void}
  */
-function prepareEventHandlers_(event) {
-
-    var sortedHandlers = [];
+function dispatch_(event){
 
     // all the events (both delegates, both directly bound)
     // registered on the event current target
@@ -367,8 +365,8 @@ function prepareEventHandlers_(event) {
 
     // here we're rising the DOM tree, starting from the target element,
     // till we reach the element on which the event was bound.
-    // for each element we check if is is the "delegator" of a registered event;
-    // in this case the the corresponding handler object is added to the list of those which will be executed.
+    // for each element we check if it is the "delegator" of a registered event;
+    // in this case the the corresponding handler object is executed.
     domUp_(event.target, event.currentTarget, function(currElem) {
 
         if (!currElem.disabled || event.type !== "click"){
@@ -382,9 +380,10 @@ function prepareEventHandlers_(event) {
 
                 if (match_(currElem, eventObj.delegator)) {
 
-                    eventObj.delegatorEl = currElem;
+                    // @todo handle stop propagation
 
-                    sortedHandlers.push(eventObj);
+                    eventObj.originalEvent = event;
+                    eventObj.handler.call(currElem, eventObj);
                 }
             });
         }
@@ -392,37 +391,15 @@ function prepareEventHandlers_(event) {
     });
 
     // ... then add the directly bound events
-    return sortedHandlers.concat(...eventObjs.filter(x => !x.delegate));
+
+    eventObjs.filter(x => !x.delegate).forEach(function(eventObj) {
+        eventObj.originalEvent = event;
+        eventObj.handler.call(event.currentTarget, eventObj);
+    });
 
 }
 
 
-/**
- * @name dispatch_
- * @private
- * @description
- * Is the function used as handler for the event listener;
- * it controls the execution of all the listeners for the current event.
- *
- * @param {Object} evt: the real event object
- *
- * @returns {void}
- */
-function dispatch_(evt){
-
-    var boundElem = this;
-    var evtTarget = evt.target;
-
-    var listeners = prepareEventHandlers_(evt); // Store.get(boundElem, evt.type);
-
-
-
-    listeners.forEach(function(listener) {
-        listener.originalEvent = evt;
-        listener.handler.call(listener.delegatorEl || evtTarget, listener);
-    })
-
-}
 
 
 /**

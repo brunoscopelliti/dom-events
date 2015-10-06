@@ -55,7 +55,7 @@ test("[DEL1] evt.target == delegator", function (assert) {
 
     var call = spy.getCall(0);
 
-    assert.ok(spy.calledOnce, _.one(spy.callCount));
+    assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
     assert.ok(call.calledOn(clickedEl), "Event handler is called with the delegator/target element as 'this'");
     _.typeEvent(call.args[0]);
 
@@ -73,8 +73,28 @@ test("[DEL2] evt.target is inside the delegator", function (assert) {
 
     var call = spy.getCall(0);
 
-    assert.ok(spy.calledOnce, _.one(spy.callCount));
+    assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
     assert.ok(call.calledOn(delegatorEl), "Event handler is called with the delegator element as this");
     _.typeEvent(call.args[0]);
+
+});
+
+test("[DEL3] delegate event listener on the document", function (assert) {
+
+    var spy = sinon.spy();
+    var clickedEl = $$("#countries .it")[0];
+
+    Events.on(document, "click", ".country", spy);
+    trigger(clickedEl, "click");
+
+    var call = spy.getCall(0);
+
+    assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
+    assert.ok(call.calledOn(clickedEl), "Event handler is called with the delegator element as 'this'");
+    _.typeEvent(call.args[0]);
+
+    Events.off(document);
+
+});
 
 });

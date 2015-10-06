@@ -8,17 +8,14 @@
  */
 
 
-
-
 /**
  * @name match_
  * @private
  * @description
  * Determine if the element would be selected by the specified selector string
- * @todo
  *
- * @param {HTMLElement}
- * @param {String} selector
+ * @param {HTMLElement} elem: The html element for which the test should be executed
+ * @param {String} selector: The selector that should be used for the test
  * @return {Boolean}
  */
 var match_ = (function(el) {
@@ -36,24 +33,25 @@ var match_ = (function(el) {
 }(document.body));
 
 
-
-
 /**
  * @name Store
- *
+ * @description
+ * Stores the event listeners set, and exposes methods to modify the collection.
  */
 var Store = (function() {
 
     /**
      * @name guid_
-     * @description an unique id for a listener entry in the Store's registry
+     * @description
+     * An unique id for a listener entry in the Store's registry
      */
     var guid_ = 0;
 
 
     /**
      * @name guid
-     * @description symbol used to store the id of the handler's objects
+     * @description
+     * Symbol used to store the id of the handler's objects
      */
     const guid = Symbol("EVStore_guid");
 
@@ -66,7 +64,9 @@ var Store = (function() {
     const eventsTable_ = new WeakMap();
 
 
-
+    /*
+     * Public api
+     */
 
     function get(el, type = "") {
 
@@ -89,9 +89,6 @@ var Store = (function() {
 
         var eventObj = prepareEventObject_(type, delegator, handler);
 
-
-
-
         if(!eventsTable_.has(el)){
             eventsTable_.set(el, {});
         }
@@ -111,114 +108,18 @@ var Store = (function() {
     }
 
 
-    function del(el, type, delegator, handler) {}
+    function del(el, type, delegator, handler) {
 
-
-    function run(el, type, data) {}
-
-
-
-
-    function prepareEventObject_(type, delegator, handler){
-
-        var id = ++guid_;
-        var isDelegate = delegator != null;
-
-        var eventObj = Object.create(null);
-
-
-
-        /**
-         * {Number} guid
-         * unique id for this entry
-         */
-        eventObj[guid] = id;
-
-        /**
-         * {Boolean} delegate
-         * it is true for delegated listener
-         */
-        eventObj.delegate = isDelegate;
-
-        /**
-         * {Function} handler
-         * the function that should be executed when the event is triggered
-         */
-        eventObj.handler = function(event) {
-            return handler.call(this, event);
-        };
-
-        // we're putting a mark on the handler function
-        // so that when the time comes it will be easy to remove the listener
-        if(!handler[guid]){
-            handler[guid] = eventObj.handler[guid] = id;
-        }
-        else {
-            eventObj.handler[guid] = handler[guid];
-        }
-
-        /**
-         * {String} delegator
-         * the delegator selector
-         */
-        eventObj.delegator = delegator;
-
-        /**
-         * {HTMLElement} delegatorEl
-         * the delegator element on which the event occurred
-         */
-        eventObj.delegatorEl = null;
-
-        /**
-         * {String} type
-         * the event name
-         */
-        eventObj.type = type;
-
-        return eventObj;
-    }
-
-
-
-
-
-
-    /**
-     * @name addDOMListener_
-     * @function
-     * @private
-     * @description
-     * Add the event listener on the html element for the specified event.
-     *
-     * @param {HTMLElement} el: the html element for which add the event listener
-     * @param {String} type: the name of the event
-     * @return {void}
-     */
-    function addDOMListener_(el, type){
-
-        el.addEventListener(type, dispatch_, false);
+        throw "to be implemented";
 
     }
 
 
-    /**
-     * @name removeDOMListener_
-     * @function
-     * @private
-     * @description
-     * Remove the listener of the specified event from the html element.
-     *
-     * @param {HTMLElement} el: the html element for which remove the event listener
-     * @param {String} type: the name of the event
-     * @return {void}
-     */
-    function removeDOMListener_(el, type){
+    function run(el, type, data) {
 
-        el.removeEventListener(type, dispatch_, false);
+        throw "to be implemented";
 
     }
-
-
 
 
 
@@ -291,7 +192,130 @@ var Store = (function() {
 
     }
 
+
+    /*
+     * Private methods
+     */
+
+
+    /**
+     * @name prepareEventObject_
+     * @function
+     * @private
+     * @description
+     * @todo
+     *
+     * @param {String} type: the name of the event
+     * @param {String} delegator: selector of the html elements which should react on the event
+     * @param {Function} handler: the function that is executed when the event occurs
+     * @return {Object}
+     */
+    function prepareEventObject_(type, delegator, handler){
+
+        var id = ++guid_;
+        var isDelegate = delegator != null;
+
+        var eventObj = Object.create(null);
+
+
+
+        /**
+         * {Number} guid
+         * Unique id for this entry
+         */
+        eventObj[guid] = id;
+
+        /**
+         * {Boolean} delegate
+         * It is true for delegated listener
+         */
+        eventObj.delegate = isDelegate;
+
+        /**
+         * {Function} handler
+         * Function that should be executed when the event is triggered
+         */
+        eventObj.handler = function(event) {
+            return handler.call(this, event);
+        };
+
+        // we're putting a mark on the handler function
+        // so that when the time comes it will be easy to remove the listener
+        if(!handler[guid]){
+            handler[guid] = eventObj.handler[guid] = id;
+        }
+        else {
+            eventObj.handler[guid] = handler[guid];
+        }
+
+        /**
+         * {String} delegator
+         * The delegator selector
+         */
+        eventObj.delegator = delegator;
+
+        /**
+         * {HTMLElement} delegatorEl
+         * The delegator element on which the event occurred
+         */
+        eventObj.delegatorEl = null;
+
+        /**
+         * {String} type
+         * The event name
+         */
+        eventObj.type = type;
+
+
+
+        return eventObj;
+    }
+
+
+    /**
+     * @name addDOMListener_
+     * @function
+     * @private
+     * @description
+     * Add the event listener on the html element for the specified event.
+     *
+     * @param {HTMLElement} el: the html element for which add the event listener
+     * @param {String} type: the name of the event
+     * @return {void}
+     */
+    function addDOMListener_(el, type){
+
+        el.addEventListener(type, dispatch_, false);
+
+    }
+
+
+    /**
+     * @name removeDOMListener_
+     * @function
+     * @private
+     * @description
+     * Remove the listener of the specified event from the html element.
+     *
+     * @param {HTMLElement} el: the html element for which remove the event listener
+     * @param {String} type: the name of the event
+     * @return {void}
+     */
+    function removeDOMListener_(el, type){
+
+        el.removeEventListener(type, dispatch_, false);
+
+    }
+
+
 }());
+
+
+
+
+
+
+
 /**
  * @name domUp_
  * @private

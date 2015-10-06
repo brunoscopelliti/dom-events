@@ -33,7 +33,7 @@ test("[ON01] add event listener", function (assert) {
 
     var call = spy.getCall(0);
 
-    assert.ok(spy.calledOnce, _.one(spy.callCount));
+    assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
     assert.ok(call.calledOn(this.el), "Event handler is called with the target element as 'this'");
     _.typeEvent(call.args[0]);
 
@@ -48,7 +48,7 @@ test("[ON02] listener on disabled element", function (assert) {
     Events.on(this.el, "click", spy);
     trigger(this.el, "click");
 
-    assert.ok(!spy.called, _.none("The event handler", spy.callCount));
+    assert.ok(!spy.called, _.none("Event handler", spy.callCount));
 
 });
 
@@ -62,7 +62,7 @@ test("[ON03] add bound event listener", function (assert) {
 
     var call = spy.getCall(0);
 
-    assert.ok(spy.calledOnce, _.one(spy.callCount));
+    assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
     assert.ok(call.calledOn(fakeContext), "Event handler is called with the bound object as 'this'");
     _.typeEvent(call.args.pop());
     assert.equal(call.args.join(" "), "hello world", "Event handler receives the other parameters in the correct positions");

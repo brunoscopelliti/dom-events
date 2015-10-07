@@ -117,7 +117,16 @@ var Store = (function() {
 
     function run(el, type, data) {
 
-        throw "to be implemented";
+        // throw "to be implemented";
+
+        var fakeEvent = {
+            currentTarget: el,
+            data: data,
+            target: el,
+            type: type
+        };
+
+        simulateBubbling_(fakeEvent);
 
     }
 
@@ -180,7 +189,8 @@ var Store = (function() {
          * @method
          * @memberOf Store
          * @description
-         * @todo
+         * Simulate the triggering of the event 'type' on the element 'el'.
+         * It executes the handlers attached on 'el', and simulate the bubbling of the event.
          *
          * @param {HTMLElement} el: the html element for which execute the event listener
          * @param {String} type: the name of the event
@@ -190,7 +200,7 @@ var Store = (function() {
          */
         run: run
 
-    }
+    };
 
 
     /*
@@ -410,6 +420,31 @@ function dispatch_(event){
 }
 
 
+function getBubblingPath_(el){
+    var path = [];
+
+    do {
+        path.push(el)
+    } while((el = el.parentNode));
+
+    if (path[path.length-1]===document){
+        path.push(window);
+    }
+
+    return path;
+}
+
+function simulateBubbling_(event){
+    var domTree = getBubblingPath_(event.target);
+    domTree.forEach(function(el){
+        event.currentTarget = el;
+        dispatch_(event);
+    });
+}
+
+
+
+
 
 
 /**
@@ -463,8 +498,25 @@ var DOMEvents = {
      * @name fire
      * @function
      * @memberOf DOMEvents
+     *
+     *
+     * @todo
+     *
      */
-    fire: function fire() {}
+    fire: function fire(htmlElements, type, data) {
+
+        // normalize arguments
+        var elems = toArray_(htmlElements);
+
+        elems.forEach(function(el) {
+
+            // @todo check if the event bubbles up
+
+            Store.run(el, type, data);
+
+        });
+
+    }
 
 };
 

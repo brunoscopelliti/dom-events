@@ -93,6 +93,9 @@ function setup(dom){
  * @return {void}
  */
 function trigger(htmlElements, type) {
+
+    return Events.fire(htmlElements, type);
+
     var elems = htmlElements === window || typeof htmlElements.length == "undefined" ? [htmlElements] : Array.from(htmlElements);
     elems.forEach(function(el) {
         var fakeEvent;

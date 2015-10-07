@@ -111,7 +111,7 @@ test("[DEL4] delegator is disabled", function (assert) {
     var spyBtn = sinon.spy();
     var spyChild = sinon.spy();
     var boundEl = $$("#btn-row");
-    var clickedEl = $$("#btn span")[0];
+    var clickedEl = $$("#btn span");
 
     Events.on(boundEl, "click", "#child", spyChild);
     Events.on(boundEl, "click", "#btn", spyBtn);

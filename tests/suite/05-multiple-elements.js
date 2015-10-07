@@ -1,5 +1,5 @@
 
-QUnit.module( "dom-events.js Events.on", {
+QUnit.module( "dom-events.js", {
     beforeEach: function() {
 
         var fakeDOM = "\

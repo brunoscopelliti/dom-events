@@ -6,9 +6,15 @@
  * Events.on add an event listener on the dom element passed as parameter,
  * that is a delegate for the event fired on the elements matching the "delegatorSelector" selector.
  *
+ * Event handler is executed both when the evt.target == delegatorSelector element ([DEL1]),
+ * both when evt.target is inside the target ([DEL2]).
+ * If multiple matching targets are found during the bubbling, the event handler is executed multiple times,
+ * each time with the matching target as context (this), [DEL5].
+ *
+ * Events which occurs on disabled delegators do not have effect, [DEL4].
  */
 
-QUnit.module( "dom-events.js delegation", {
+QUnit.module( "dom-events.js", {
     beforeEach: function() {
 
         var fakeDOM = "\
@@ -116,4 +122,25 @@ test("[DEL4] delegator is disabled", function (assert) {
     assert.ok(spyChild.calledOnce, _.one("Event handler", spyChild.callCount));
 
 });
+
+test("[DEL5] multiple matching", function (assert) {
+
+    var spy = sinon.spy();
+    var boundEl = $$("#list");
+    var clickedEl = $$("#clickedEl")[0];
+    var matchingEl = $$("#matchingEl")[0];
+
+    Events.on(boundEl, "click", ".entry", spy);
+    trigger(clickedEl, "click");
+
+    assert.ok(spy.calledTwice, "Event handler is fired two times");
+
+    var call1 = spy.getCall(0);
+    assert.ok(call1.calledOn(clickedEl), "Event handler is called with the delegator element as 'this'");
+    _.typeEvent(call1.args[0]);
+
+    var call2 = spy.getCall(1);
+    assert.ok(call2.calledOn(matchingEl), "Event handler is called with the delegator element as 'this'");
+    _.typeEvent(call2.args[0]);
+
 });

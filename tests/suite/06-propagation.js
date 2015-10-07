@@ -96,6 +96,87 @@ test("[EP03] bubbling vs delegation [B]", function (assert) {
 
 });
 
+test("[EP04] delegate handlers are executed starting from the innermost element [A]", function (assert) {
+
+    // [A] target element is the same, bound elements are different
+
+    var spyTestContainer = sinon.spy();
+    var spyParent = sinon.spy();
+    var mainContainer = $$("#test-container");
+    var parent = $$("#parent");
+    var child = $$("#parent button");
+
+    Events.on(mainContainer, "click", "button", spyTestContainer);
+    Events.on(parent, "click", "button", spyParent);
+
+    trigger(child, "click");
+
+    assert.ok(spyParent.calledOnce && spyTestContainer.calledOnce, "Event handlers are fired one time");
+    assert.ok(spyParent.calledBefore(spyTestContainer), "The handler of the inner bound element is executed before the handler of the outer bound element");
+
+});
+
+test("[EP05] delegate handlers are executed starting from the innermost element [B]", function (assert) {
+
+    // [B] target elements are different, bound elements is the same
+
+    var spyParent = sinon.spy();
+    var spyChild = sinon.spy();
+    var mainContainer = $$("#test-container");
+    var parent = $$("#parent");
+    var child = $$("#parent button");
+
+    Events.on(mainContainer, "click", "#parent", spyParent);
+    Events.on(mainContainer, "click", "button", spyChild);
+
+    trigger(child, "click");
+
+    assert.ok(spyParent.calledOnce && spyChild.calledOnce, "Event handlers are fired one time");
+    assert.ok(spyChild.calledBefore(spyParent), "The handler of the inner element is executed before the handler of the outer element");
+
+});
+
+test("[EP06] delegate handlers are executed starting from the innermost element [C1]", function (assert) {
+
+    // [C1] different bound elements, and different targets
+
+    var spyParent = sinon.spy();
+    var spyChild = sinon.spy();
+    var mainContainer = $$("#test-container");
+    var parent = $$("#parent");
+    var child = $$("#parent button");
+
+    Events.on(mainContainer, "click", "#parent", spyParent);
+    Events.on(parent, "click", "button", spyChild);
+
+    trigger(child, "click");
+
+    assert.ok(spyParent.calledOnce && spyChild.calledOnce, "Event handlers are fired one time");
+    assert.ok(spyChild.calledBefore(spyParent), "The handler of the inner element is executed before the handler of the outer element");
+
+});
+
+test("[EP07] delegate handlers are executed starting from the innermost element [C2]", function (assert) {
+
+    // [C2] different bound elements, and different targets
+
+    var spyParent = sinon.spy();
+    var spyChild = sinon.spy();
+    var mainContainer = $$("#test-container");
+    var parent = $$("#parent");
+    var child = $$("#child");
+    var btn = $$("#btn");
+
+    Events.on(mainContainer, "click", "#btn", spyParent);
+    Events.on(parent, "click", "#child", spyChild);
+
+    trigger(btn, "click");
+
+    assert.ok(spyParent.calledOnce && spyChild.calledOnce, "Event handlers are fired one time");
+    assert.ok(spyChild.calledBefore(spyParent), "The handler of the inner element is executed before the handler of the outer element");
+
+});
+
 
 
 

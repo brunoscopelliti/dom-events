@@ -369,31 +369,41 @@ function dispatch_(event){
     // in this case the the corresponding handler object is executed.
     domUp_(event.target, event.currentTarget, function(currElem) {
 
-        if (!currElem.disabled || event.type !== "click"){
-            eventObjs.forEach(function findMatchOnTheCurrentNode_(eventObj) {
-
-                if (!eventObj.delegate || (eventObj.delegate && !contains_(currElem, eventObj.delegator))){
-                    // in case the element on which the event was triggered does not contain the delegator
-                    // exit soon
-                    return;
-                }
-
-                if (match_(currElem, eventObj.delegator)) {
-
-                    // @todo handle stop propagation
-
-                    eventObj.originalEvent = event;
-                    eventObj.handler.call(currElem, eventObj);
-                }
-            });
+        if (currElem.disabled && event.type == "click"){
+            return;
         }
+
+        eventObjs.forEach(function findMatchOnTheCurrentNode_(eventObj) {
+
+            if (!eventObj.delegate || (eventObj.delegate && !contains_(currElem, eventObj.delegator))){
+                // in case the element on which the event was triggered does not contain the delegator
+                // exit soon
+                return;
+            }
+
+            if (match_(currElem, eventObj.delegator)) {
+
+                // @todo handle stop propagation
+
+
+                decorateEventObject_(eventObj, event);
+
+                eventObj.handler.call(currElem, eventObj);
+            }
+        });
 
     });
 
     // ... then add the directly bound events
 
     eventObjs.filter(x => !x.delegate).forEach(function(eventObj) {
-        eventObj.originalEvent = event;
+
+        if (event.currentTarget.disabled && event.type == "click"){
+            return;
+        }
+
+        decorateEventObject_(eventObj, event);
+
         eventObj.handler.call(event.currentTarget, eventObj);
     });
 
@@ -492,6 +502,24 @@ function toArray_(htmlElements) {
 function isWindow_(obj){
     return obj === window;
 }
+
+
+function isEventObject_(obj){
+    return /Event]$/.test(Object.prototype.toString.call(obj));
+}
+
+
+function decorateEventObject_(obj, event){
+
+    if (isEventObject_(obj)) {
+        obj.originalEvent = event;
+    }
+
+    obj.currentTarget = event.currentTarget;
+    obj.target = event.target;
+
+}
+
 
 
 /**

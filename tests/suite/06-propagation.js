@@ -79,7 +79,7 @@ test("[EP03] bubbling vs delegation [B]", function (assert) {
     // in case the same element has both a directly bound event listener, both a delegated event listener
     // the execution of the former is always postponed to the execution of the latter;
     // the delegated event listener handler could also block the event propagation, so that the
-    // directly bound event listener handler is never executed (see [****A]).
+    // directly bound event listener handler is never executed (see [EP11], [EP12]).
 
     var spyNoDelegate = sinon.spy();
     var spyDelegate = sinon.spy();
@@ -179,11 +179,67 @@ test("[EP07] delegate handlers are executed starting from the innermost element 
 
 
 
+/**
+ * Stop event propagation
+ */
 
-// @todo stop propagation should be implemented
-xtest("[****A] stop propagation", function (assert) {
+test("[EP08] stop event propagation (with event.stopPropagation method call)", function (assert) {
 
-    // check [EP03] for reference
+    var spyParent = sinon.spy();
+    var parent = $$("#parent");
+    var child = $$("#parent button");
+
+    Events.on(parent, "click", spyParent);
+    Events.on(child, "click", function(evt){
+        evt.stopPropagation();
+    });
+    trigger(child, "click");
+
+    assert.ok(this.stopPropagationSpy.calledOnce, "stopPropagation was called once");
+    assert.ok(!spyParent.called, _.none("Event handler", spyParent.callCount));
+
+
+});
+
+test("[EP09] stop event propagation (with return false)", function (assert) {
+
+    var spyChild = sinon.spy();
+    var spyParent = sinon.spy();
+    var parent = $$("#parent");
+    var child = $$("#parent button");
+
+    Events.on(parent, "click", spyParent);
+    Events.on(child, "click", function(){ spyChild(); return false; });
+    trigger(child, "click");
+
+    assert.ok(spyChild.calledOnce && !spyParent.called, _.none("Event handler", spyParent.callCount));
+
+});
+
+// @todo It's possible to implement a jQuery style event.stopImmediatePropagation method
+// @todo require attention
+test("[EP10] stop event propagation has no effect once the event has reached its target", function (assert) {
+
+    var spyOne = sinon.spy();
+    var spyTwo = sinon.spy();
+    var spyThree = sinon.spy();
+    var child = $$("#parent button");
+
+    Events.on(child, "click", function(evt) { spyOne(); evt.stopPropagation(); });
+    Events.on(child, "click", function() { spyTwo(); return false; });
+    Events.on(child, "click", spyThree);
+    trigger(child, "click");
+
+    assert.ok(spyOne.calledOnce && spyTwo.calledOnce && spyThree.calledOnce, "Event handlers are fired one time");
+    assert.ok(spyOne.calledBefore(spyTwo) && spyTwo.calledBefore(spyThree), "The handlers are executed in the order of registration");
+
+});
+
+test("[EP11] delegate handler stops propagation (with event.stopPropagation)", function (assert) {
+
+    // in this case there are both a delegate listener, both a directly bound event listener
+    // on the same html element
+    // check [EP03] for further info
 
     var spyDirect = sinon.spy();
     var mainContainer = $$("#test-container")[0];
@@ -198,3 +254,69 @@ xtest("[****A] stop propagation", function (assert) {
     assert.ok(!spyDirect.called, _.none("Direct bound event handler", spyDirect.callCount));
 
 });
+
+test("[EP12] delegate handler stops propagation (with return false)", function (assert) {
+
+    // in this case there are both a delegate listener, both a directly bound event listener
+    // on the same html element
+    // check [EP03] for further info
+
+    var spyDirect = sinon.spy();
+    var mainContainer = $$("#test-container")[0];
+    var child = $$("#parent button");
+
+    Events.on(mainContainer, "click", spyDirect);
+    Events.on(mainContainer, "click", "button", function() { return false; });
+
+    trigger(child, "click");
+
+    assert.ok(!spyDirect.called, _.none("Direct bound event handler", spyDirect.callCount));
+
+});
+
+test("[EP13] delegate handler stops propagation (with event.stopPropagation)", function (assert) {
+
+    // in this case the delegate listener, and the directly bound event listener
+    // are on different dom elements
+    // check [EP03] for further info
+
+    var spyNoDelegate = sinon.spy();
+    var mainContainer = $$("#test-container");
+    var parent = $$("#parent");
+    var child = $$("#parent button");
+
+    Events.on(mainContainer, "click", spyNoDelegate);
+    Events.on(parent, "click", "button", function(evt) { evt.stopPropagation(); });
+
+    trigger(child, "click");
+
+    assert.ok(this.stopPropagationSpy.calledOnce, "stopPropagation was called once");
+    assert.ok(!spyNoDelegate.called, "When delegate handler stops propagation, bound handler is never executed");
+
+});
+
+test("[EP14] delegate handler stops propagation (with return false)", function (assert) {
+
+    // in this case the delegate listener, and the directly bound event listener
+    // are on different dom elements
+    // check [EP03] for further info
+
+    var spyNoDelegate = sinon.spy();
+    var mainContainer = $$("#test-container");
+    var parent = $$("#parent");
+    var child = $$("#parent button");
+
+    Events.on(mainContainer, "click", spyNoDelegate);
+    Events.on(parent, "click", "button", function() { return false; });
+
+    trigger(child, "click");
+
+    assert.ok(!spyNoDelegate.called, "When delegate handler return false, bound handler is never executed");
+
+});
+
+
+
+
+
+

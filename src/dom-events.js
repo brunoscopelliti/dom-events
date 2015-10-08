@@ -322,10 +322,6 @@ var Store = (function() {
 
 
 
-
-
-
-
 /**
  * @name domUp_
  * @private
@@ -336,7 +332,7 @@ var Store = (function() {
  *
  * @param {HTMLElement} startEl: html element from which the climb the DOM tree starts
  * @param {HTMLElement} stopEl: html element on which the DOM traversing should be interrupted
- * @param {Function} func: function executed for each element; receives the current element as paramenter
+ * @param {Function} func: function executed for each element; receives the current element as parameter
  * @return {void}
  */
 function domUp_(startEl, stopEl, func){
@@ -354,6 +350,75 @@ function domUp_(startEl, stopEl, func){
 
 }
 
+
+/**
+ * @name isEventObject_
+ * @private
+ * @description
+ * Determine if the parameter provided is an event object (instanceof Event).
+ * Returns true if 'obj' is an event object.
+ *
+ * @param {Object} obj: the object subject of the test
+ * @return {Boolean}
+ */
+function isEventObject_(obj){
+    return /Event]$/.test(Object.prototype.toString.call(obj));
+}
+
+
+function decorateEventObject_(obj, event, delegatorEl){
+
+    if (isEventObject_(obj)) {
+        obj.originalEvent = event;
+    }
+
+    if (delegatorEl){
+        obj.delegatorEl = delegatorEl;
+    }
+
+    obj.currentTarget = event.currentTarget;
+    obj.target = event.target;
+
+}
+
+
+/**
+ * @name getBubblingPath_
+ * @private
+ * @description
+ * Returns an array with all the parent nodes of the provided element.
+ * The first element of the array is the element itself; the latest is the window object.
+ *
+ * @param {HTMLElement}
+ * @return {Array}
+ */
+function getBubblingPath_(el){
+    var path = [];
+
+    do {
+        path.push(el)
+    } while((el = el.parentNode));
+
+    if (path[path.length-1]===document){
+        path.push(window);
+    }
+
+    return path;
+}
+
+function simulateBubbling_(event){
+
+    var domTree = getBubblingPath_(event.target);
+
+    domTree.forEach(function(el){
+
+        event.currentTarget = el;
+
+        dispatch_(event);
+
+    });
+
+}
 
 
 /**
@@ -396,7 +461,7 @@ function dispatch_(event){
                 // @todo handle stop propagation
 
 
-                decorateEventObject_(eventObj, event);
+                decorateEventObject_(eventObj, event, currElem);
 
                 eventObj.handler.call(currElem, eventObj);
             }
@@ -420,27 +485,7 @@ function dispatch_(event){
 }
 
 
-function getBubblingPath_(el){
-    var path = [];
 
-    do {
-        path.push(el)
-    } while((el = el.parentNode));
-
-    if (path[path.length-1]===document){
-        path.push(window);
-    }
-
-    return path;
-}
-
-function simulateBubbling_(event){
-    var domTree = getBubblingPath_(event.target);
-    domTree.forEach(function(el){
-        event.currentTarget = el;
-        dispatch_(event);
-    });
-}
 
 
 
@@ -458,6 +503,7 @@ var DOMEvents = {
      * @memberOf DOMEvents
      */
     debug: function debug() {},
+
 
     /**
      * @name on
@@ -487,6 +533,7 @@ var DOMEvents = {
 
     },
 
+
     /**
      * @name off
      * @function
@@ -494,14 +541,20 @@ var DOMEvents = {
      */
     off: function off() {},
 
+
     /**
      * @name fire
      * @function
      * @memberOf DOMEvents
+     * @description
+     * Simulate the triggering of the event 'type' on the elements 'htmlElements'.
+     * It executes the handlers attached on 'htmlElements', and simulate the bubbling of the event, on their parents.
      *
+     * @param {HTMLElement|HTMLCollection|NodeList} htmlElements: html elements for which simulate the event
+     * @param {String} type: the name of the event
+     * @param {Any} data: additional arguments for the event handler
      *
-     * @todo
-     *
+     * @return {void}
      */
     fire: function fire(htmlElements, type, data) {
 
@@ -556,24 +609,6 @@ function isWindow_(obj){
 }
 
 
-function isEventObject_(obj){
-    return /Event]$/.test(Object.prototype.toString.call(obj));
-}
-
-
-function decorateEventObject_(obj, event){
-
-    if (isEventObject_(obj)) {
-        obj.originalEvent = event;
-    }
-
-    obj.currentTarget = event.currentTarget;
-    obj.target = event.target;
-
-}
-
-
-
 /**
  * @name contains_
  * @private
@@ -593,6 +628,7 @@ function contains_(container, contained, strictly){
     }
     return (!strictly || container !== contained) && container.contains(contained);
 }
+
 
 
 export default DOMEvents;

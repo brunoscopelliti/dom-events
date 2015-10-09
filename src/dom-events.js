@@ -64,6 +64,7 @@ var Store = (function() {
     const eventsTable_ = new WeakMap();
 
 
+
     /*
      * Public api
      */
@@ -87,7 +88,7 @@ var Store = (function() {
     
     function add(el, type, delegator, handler) {
 
-        var eventObj = prepareEventObject_(type, delegator, handler);
+        var eventObj = prepareStoreObject_(type, delegator, handler);
 
         if(!eventsTable_.has(el)){
             eventsTable_.set(el, {});
@@ -117,16 +118,13 @@ var Store = (function() {
 
     function run(el, type, data) {
 
-        // throw "to be implemented";
+        var event = { currentTarget: el, data: data, isFired: true, target: el, type: type };
+        var domTree = getBubblingPath_(el);
 
-        var fakeEvent = {
-            currentTarget: el,
-            data: data,
-            target: el,
-            type: type
-        };
-
-        simulateBubbling_(fakeEvent);
+        domTree.every(function(el){
+            event.currentTarget = el;
+            return dispatch_(event);
+        });
 
     }
 
@@ -209,7 +207,7 @@ var Store = (function() {
 
 
     /**
-     * @name prepareEventObject_
+     * @name prepareStoreObject_
      * @function
      * @private
      * @description
@@ -220,14 +218,12 @@ var Store = (function() {
      * @param {Function} handler: the function that is executed when the event occurs
      * @return {Object}
      */
-    function prepareEventObject_(type, delegator, handler){
+    function prepareStoreObject_(type, delegator, handler){
 
         var id = ++guid_;
         var isDelegate = delegator != null;
 
         var eventObj = Object.create(null);
-
-
 
         /**
          * {Number} guid
@@ -246,7 +242,7 @@ var Store = (function() {
          * Function that should be executed when the event is triggered
          */
         eventObj.handler = function(event) {
-            return handler.call(this, event);
+            return handler.apply(this, [event, ...event.data]);
         };
 
         // we're putting a mark on the handler function
@@ -263,12 +259,6 @@ var Store = (function() {
          * The delegator selector
          */
         eventObj.delegator = delegator;
-
-        /**
-         * {HTMLElement} delegatorEl
-         * The delegator element on which the event occurred
-         */
-        eventObj.delegatorEl = null;
 
         /**
          * {String} type
@@ -316,7 +306,6 @@ var Store = (function() {
         el.removeEventListener(type, dispatch_, false);
 
     }
-
 
 }());
 
@@ -366,22 +355,6 @@ function isEventObject_(obj){
 }
 
 
-function decorateEventObject_(obj, event, delegatorEl){
-
-    if (isEventObject_(obj)) {
-        obj.originalEvent = event;
-    }
-
-    if (delegatorEl){
-        obj.delegatorEl = delegatorEl;
-    }
-
-    obj.currentTarget = event.currentTarget;
-    obj.target = event.target;
-
-}
-
-
 /**
  * @name getBubblingPath_
  * @private
@@ -406,17 +379,70 @@ function getBubblingPath_(el){
     return path;
 }
 
-function simulateBubbling_(event){
 
-    var domTree = getBubblingPath_(event.target);
+/**
+ * @name eventBase_
+ * @description
+ * @todo
+ */
+var eventBase_ = Object.create(null, {
 
-    domTree.forEach(function(el){
+    stopPropagation: {
+        value: function() {
+            this.isPropagationStopped = true;
+            if (this.originalEvent){
+                this.originalEvent.stopPropagation();
+            }
+        }
+    },
 
-        event.currentTarget = el;
+    preventDefault: {
+        value: function() {
+            this.isDefaultPrevented = true;
+            if (this.originalEvent){
+                this.originalEvent.preventDefault();
+            }
+        }
+    }
 
-        dispatch_(event);
+});
 
-    });
+
+/**
+ * @name prepareEventObject_
+ * @private
+ * @description
+ * Prepare the custom event object
+ *
+ * @param {Object} origEvent: original event object
+ * @return {Object} Custom event object
+ */
+function prepareEventObject_(origEvent){
+
+    var event = Object.create(eventBase_);
+
+    /**
+     * {Array} data
+     * Additional arguments provided to the handler
+     */
+    event.data = origEvent.data || [];
+
+    // @todo find out which property good to have;
+    // @todo find out a smarter way to make the copy;
+
+    event.currentTarget = origEvent.currentTarget;
+    event.target = origEvent.target;
+    event.type = origEvent.type;
+
+    //if (delegatorEl){
+    //    event.delegatorEl = delegatorEl;
+    //}
+
+    if (isEventObject_(origEvent)) {
+        event.originalEvent = origEvent;
+    }
+
+    return event;
 
 }
 
@@ -428,15 +454,16 @@ function simulateBubbling_(event){
  * Is the function used as handler for the event listener;
  * it controls the execution of all the listeners for the current event.
  *
- * @param {Object} evt: the real event object
+ * @param {Object} origEvent: the real event object
  *
- * @returns {void}
+ * @returns {Boolean} True if event propagation was not stopped
  */
-function dispatch_(event){
+function dispatch_(origEvent){
 
-    // all the events (both delegates, both directly bound)
-    // registered on the event current target
+    const event = prepareEventObject_(origEvent);
+
     var eventObjs = Store.get(event.currentTarget, event.type);
+
 
     // here we're rising the DOM tree, starting from the target element,
     // till we reach the element on which the event was bound.
@@ -457,37 +484,40 @@ function dispatch_(event){
             }
 
             if (match_(currElem, eventObj.delegator)) {
-
-                // @todo handle stop propagation
-
-
-                decorateEventObject_(eventObj, event, currElem);
-
-                eventObj.handler.call(currElem, eventObj);
+                if (eventObj.handler.call(currElem, event) === false){
+                    event.stopPropagation();
+                    event.preventDefault();
+                }
             }
         });
 
+        // in case the event bubbling was stopped
+        // returning false would break domUp_'s rise
+        return !event.isPropagationStopped;
+
     });
 
-    // ... then add the directly bound events
+    if (event.isPropagationStopped){
+        return false;
+    }
 
-    eventObjs.filter(x => !x.delegate).forEach(function(eventObj) {
+    // ... then executes the directly bound events
 
-        if (event.currentTarget.disabled && event.type == "click"){
-            return;
-        }
+    if (!event.currentTarget.disabled || event.type != "click"){
 
-        decorateEventObject_(eventObj, event);
+        eventObjs.filter(x => !x.delegate).forEach(function(eventObj) {
+            if (eventObj.handler.call(event.currentTarget, event) === false){
+                event.stopPropagation();
+                event.preventDefault();
+            }
+        });
 
-        eventObj.handler.call(event.currentTarget, eventObj);
-    });
+    }
+
+    // return info about the propagation state
+    return !event.isPropagationStopped;
 
 }
-
-
-
-
-
 
 
 
@@ -556,7 +586,7 @@ var DOMEvents = {
      *
      * @return {void}
      */
-    fire: function fire(htmlElements, type, data) {
+    fire: function fire(htmlElements, type, ...data) {
 
         // normalize arguments
         var elems = toArray_(htmlElements);

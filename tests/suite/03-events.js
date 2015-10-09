@@ -58,6 +58,7 @@ test("[ON03] add bound event listener", function (assert) {
     var spy = sinon.spy();
 
     Events.on(this.el, "click", spy.bind(fakeContext, "hello", "world"));
+
     trigger(this.el, "click");
 
     var call = spy.getCall(0);

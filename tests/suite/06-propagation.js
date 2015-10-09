@@ -62,12 +62,12 @@ test("[EP02] bubbling vs delegation [A]", function (assert) {
     var spyNoDelegate = sinon.spy();
     var spyDelegate = sinon.spy();
     var mainContainer = $$("#test-container");
-    var child = $$("#parent button");
+    var button = $$("#parent button");
 
     Events.on(mainContainer, "click", "button", spyDelegate);
-    Events.on(child, "click", spyNoDelegate);
+    Events.on(button, "click", spyNoDelegate);
 
-    trigger(child, "click");
+    trigger(button, "click");
 
     assert.ok(spyDelegate.calledOnce && spyNoDelegate.calledOnce, "Event handlers are fired one time");
     assert.ok(spyNoDelegate.calledBefore(spyDelegate), "Handlers for the innermost element are always executed before");
@@ -84,12 +84,12 @@ test("[EP03] bubbling vs delegation [B]", function (assert) {
     var spyNoDelegate = sinon.spy();
     var spyDelegate = sinon.spy();
     var mainContainer = $$("#test-container")[0];
-    var child = $$("#parent button");
+    var button = $$("#parent button");
 
     Events.on(mainContainer, "click", spyNoDelegate);
     Events.on(mainContainer, "click", "button", spyDelegate);
 
-    trigger(child, "click");
+    trigger(button, "click");
 
     assert.ok(spyDelegate.calledOnce && spyNoDelegate.calledOnce, "Event handlers are fired one time");
     assert.ok(spyDelegate.calledBefore(spyNoDelegate), "Delegated handler is executed before");
@@ -195,7 +195,7 @@ test("[EP08] stop event propagation (with event.stopPropagation method call)", f
     });
     trigger(child, "click");
 
-    assert.ok(this.stopPropagationSpy.calledOnce, "stopPropagation was called once");
+    assert.ok(this.stopPropagationSpy.calledOnce, _.one("Event#stopPropagation", this.stopPropagationSpy.callCount));
     assert.ok(!spyParent.called, _.none("Event handler", spyParent.callCount));
 
 
@@ -290,7 +290,7 @@ test("[EP13] delegate handler stops propagation (with event.stopPropagation)", f
 
     trigger(child, "click");
 
-    assert.ok(this.stopPropagationSpy.calledOnce, "stopPropagation was called once");
+    assert.ok(this.stopPropagationSpy.calledOnce, _.one("Event#stopPropagation", this.stopPropagationSpy.callCount));
     assert.ok(!spyNoDelegate.called, "When delegate handler stops propagation, bound handler is never executed");
 
 });

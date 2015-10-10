@@ -228,7 +228,6 @@ test("[EP09] stop event propagation (with return false)", function (assert) {
 });
 
 // @todo It's possible to implement a jQuery style event.stopImmediatePropagation method
-// @todo require attention
 test("[EP10] stop event propagation has no effect once the event has reached its target", function (assert) {
 
     var spyOne = sinon.spy();
@@ -239,8 +238,6 @@ test("[EP10] stop event propagation has no effect once the event has reached its
     Events.on(child, "click", function(evt) { spyOne(); evt.stopPropagation(); });
     Events.on(child, "click", function() { spyTwo(); return false; });
     Events.on(child, "click", spyThree);
-
-    debugger;
 
     trigger(child, "click");
 
@@ -335,7 +332,7 @@ test("[EP14] delegate handler stops propagation (with return false)", function (
  * Prevent default action
  */
 
-xtest("[EP15] prevent default (with event.preventDefault)", function (assert) {
+test("[EP15] prevent default (with event.preventDefault)", function (assert) {
 
     var currentHash = location.hash;
     var link = $$("#anchor");
@@ -348,7 +345,7 @@ xtest("[EP15] prevent default (with event.preventDefault)", function (assert) {
 
 });
 
-xtest("[EP16] delegate handler prevent default (with event.preventDefault)", function (assert) {
+test("[EP16] delegate handler prevent default (with event.preventDefault)", function (assert) {
 
     var currentHash = location.hash;
     var parent = $$("#parent");
@@ -362,7 +359,7 @@ xtest("[EP16] delegate handler prevent default (with event.preventDefault)", fun
 
 });
 
-xtest("[EP17] prevent default (with return false)", function (assert) {
+test("[EP17] prevent default (with return false)", function (assert) {
 
     var currentHash = location.hash;
     var link = $$("#anchor");
@@ -374,7 +371,7 @@ xtest("[EP17] prevent default (with return false)", function (assert) {
 
 });
 
-xtest("[EP18] delegate prevent default (with return false)", function (assert) {
+test("[EP18] delegate prevent default (with return false)", function (assert) {
 
     var currentHash = location.hash;
     var parent = $$("#parent");

@@ -78,7 +78,7 @@ test("[FI03] default action", function (assert) {
 
 });
 
-xtest("[FI04] evt.stopPropagation();", function (assert) {
+test("[FI04] evt.stopPropagation();", function (assert) {
 
     var blockedSpy = sinon.spy();
     var spy = sinon.spy();
@@ -93,7 +93,7 @@ xtest("[FI04] evt.stopPropagation();", function (assert) {
 
 });
 
-xtest("[FI05] evt.preventDefault();", function (assert) {
+test("[FI05] evt.preventDefault();", function (assert) {
 
     var spy = sinon.spy();
 
@@ -109,7 +109,7 @@ xtest("[FI05] evt.preventDefault();", function (assert) {
 
 });
 
-xtest("[FI06] return false;", function (assert) {
+test("[FI06] return false;", function (assert) {
 
     var blockedSpy = sinon.spy();
     var spy = sinon.spy();
@@ -127,7 +127,7 @@ xtest("[FI06] return false;", function (assert) {
 
 });
 
-xtest("[FI07] handler execution blocked by delegate", function (assert) {
+test("[FI07] handler execution blocked by delegate", function (assert) {
 
     var blockedSpy = sinon.spy();
     var spy = sinon.spy();

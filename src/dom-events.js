@@ -427,6 +427,13 @@ function prepareEventObject_(origEvent){
 
 }
 
+/**
+ * @name defaultTrigger
+ * @type Boolean
+ * @description
+ * It's true when the default action of an event was triggered
+ */
+var defaultTrigger = false;
 
 /**
  * @name dispatch_
@@ -440,6 +447,10 @@ function prepareEventObject_(origEvent){
  * @returns {Boolean} True if event propagation was not stopped
  */
 function dispatch_(origEvent){
+
+    if (defaultTrigger) {
+        return;
+    }
 
     const event = prepareEventObject_(origEvent);
 
@@ -465,10 +476,7 @@ function dispatch_(origEvent){
             }
 
             if (match_(currElem, eventObj.delegator)) {
-                if (eventObj.handler.call(currElem, event) === false){
-                    event.stopPropagation();
-                    event.preventDefault();
-                }
+                run_.call(event, eventObj.handler, currElem);
             }
         });
 
@@ -485,14 +493,7 @@ function dispatch_(origEvent){
     // ... then executes the directly bound events
 
     if (!event.currentTarget.disabled || event.type != "click"){
-
-        eventObjs.filter(x => !x.delegate).forEach(function(eventObj) {
-            if (eventObj.handler.call(event.currentTarget, event) === false){
-                event.stopPropagation();
-                event.preventDefault();
-            }
-        });
-
+        eventObjs.filter(x => !x.delegate).forEach(eventObj => run_.call(event, eventObj.handler));
     }
 
     // return info about the propagation state
@@ -500,6 +501,35 @@ function dispatch_(origEvent){
 
 }
 
+
+/**
+ * @name run_
+ * @private
+ * @description
+ * Executes the event handler, and the event default action (if any exists)
+ *
+ * @param {Function} handler: the event handler
+ * @param {HTMLElement} [target]: the element on which the event listener was registered
+ * @returns {void}
+ */
+function run_(handler, target = this.currentTarget){
+
+    if (handler.call(target, this) === false){
+        this.stopPropagation();
+        this.preventDefault();
+    }
+
+    if (this.isDefaultPrevented){
+        return;
+    }
+
+    if (typeof target[this.type] == "function"){
+        defaultTrigger = true;
+        target[this.type]();
+        defaultTrigger = false;
+    }
+
+}
 
 
 

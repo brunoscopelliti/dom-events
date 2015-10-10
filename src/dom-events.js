@@ -273,6 +273,31 @@ var Store = (function() {
 
 
     /**
+     * @name getBubblingPath_
+     * @private
+     * @description
+     * Returns an array with all the parent nodes of the provided element.
+     * The first element of the array is the element itself; the latest is the window object.
+     *
+     * @param {HTMLElement}
+     * @return {Array}
+     */
+    function getBubblingPath_(el){
+        var path = [];
+
+        do {
+            path.push(el)
+        } while((el = el.parentNode));
+
+        if (path[path.length-1]===document){
+            path.push(window);
+        }
+
+        return path;
+    }
+
+
+    /**
      * @name addDOMListener_
      * @function
      * @private
@@ -341,46 +366,6 @@ function domUp_(startEl, stopEl, func){
 
 
 /**
- * @name isEventObject_
- * @private
- * @description
- * Determine if the parameter provided is an event object (instanceof Event).
- * Returns true if 'obj' is an event object.
- *
- * @param {Object} obj: the object subject of the test
- * @return {Boolean}
- */
-function isEventObject_(obj){
-    return /Event]$/.test(Object.prototype.toString.call(obj));
-}
-
-
-/**
- * @name getBubblingPath_
- * @private
- * @description
- * Returns an array with all the parent nodes of the provided element.
- * The first element of the array is the element itself; the latest is the window object.
- *
- * @param {HTMLElement}
- * @return {Array}
- */
-function getBubblingPath_(el){
-    var path = [];
-
-    do {
-        path.push(el)
-    } while((el = el.parentNode));
-
-    if (path[path.length-1]===document){
-        path.push(window);
-    }
-
-    return path;
-}
-
-
-/**
  * @name eventBase_
  * @description
  * @todo
@@ -433,10 +418,6 @@ function prepareEventObject_(origEvent){
     event.currentTarget = origEvent.currentTarget;
     event.target = origEvent.target;
     event.type = origEvent.type;
-
-    //if (delegatorEl){
-    //    event.delegatorEl = delegatorEl;
-    //}
 
     if (isEventObject_(origEvent)) {
         event.originalEvent = origEvent;
@@ -636,6 +617,21 @@ function toArray_(htmlElements) {
  */
 function isWindow_(obj){
     return obj === window;
+}
+
+
+/**
+ * @name isEventObject_
+ * @private
+ * @description
+ * Determine if the parameter provided is an event object (instanceof Event).
+ * Returns true if 'obj' is an event object.
+ *
+ * @param {Object} obj: the object subject of the test
+ * @return {Boolean}
+ */
+function isEventObject_(obj){
+    return /Event]$/.test(Object.prototype.toString.call(obj));
 }
 
 

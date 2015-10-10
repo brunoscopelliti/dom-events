@@ -7,9 +7,20 @@
  * this means that the event handler set on the inner element
  * should be executed before other handlers on outer elements, [EP01].
  *
+ * This is still true for event delegations,
+ * however here more complex scenarios are possible: [EP04] to [EP07].
+ *
  * In case the same element listens for both directly bound events, both delegate events,
  * the execution of the former is always postponed to the execution of the delegate handlers, [EP03].
  *
+ *
+ * Event propagation could be blocked from an event handler;
+ * there are two ways in which event propagation can be interrupted: invoking the event.stopPropagation
+ * method, [EP08], or with 'return false;' from an event handler, [EP09].
+ * However both the two methods have no effect once the event has reached its target, [EP10].
+ *
+ *
+ * Note: 'return false;' is a shortcut for event.preventDefault && event.stopPropagation, [EP09] && [EP17].
  */
 
 QUnit.module( "dom-events.js", {
@@ -228,6 +239,9 @@ test("[EP10] stop event propagation has no effect once the event has reached its
     Events.on(child, "click", function(evt) { spyOne(); evt.stopPropagation(); });
     Events.on(child, "click", function() { spyTwo(); return false; });
     Events.on(child, "click", spyThree);
+
+    debugger;
+
     trigger(child, "click");
 
     assert.ok(spyOne.calledOnce && spyTwo.calledOnce && spyThree.calledOnce, "Event handlers are fired one time");
@@ -317,6 +331,58 @@ test("[EP14] delegate handler stops propagation (with return false)", function (
 
 
 
+/**
+ * Prevent default action
+ */
 
+xtest("[EP15] prevent default (with event.preventDefault)", function (assert) {
 
+    var currentHash = location.hash;
+    var link = $$("#anchor");
 
+    Events.on(link, "click", function(evt){ evt.preventDefault(); });
+    trigger(link, "click");
+
+    assert.ok(this.preventDefaultSpy.called, _.one("Event#preventDefault", this.preventDefaultSpy.callCount));
+    assert.equal(location.hash, currentHash, "default action was blocked");
+
+});
+
+xtest("[EP16] delegate handler prevent default (with event.preventDefault)", function (assert) {
+
+    var currentHash = location.hash;
+    var parent = $$("#parent");
+    var link = $$("#anchor");
+
+    Events.on(parent, "click", "#anchor", function(evt){ evt.preventDefault(); });
+    trigger(link, "click");
+
+    assert.ok(this.preventDefaultSpy.called, _.one("Event#preventDefault", this.preventDefaultSpy.callCount));
+    assert.equal(location.hash, currentHash, "default action was blocked");
+
+});
+
+xtest("[EP17] prevent default (with return false)", function (assert) {
+
+    var currentHash = location.hash;
+    var link = $$("#anchor");
+
+    Events.on(link, "click", function(){ return false; });
+    trigger(link, "click");
+
+    assert.equal(location.hash, currentHash, "default action was blocked");
+
+});
+
+xtest("[EP18] delegate prevent default (with return false)", function (assert) {
+
+    var currentHash = location.hash;
+    var parent = $$("#parent");
+    var link = $$("#anchor");
+
+    Events.on(parent, "click", "#anchor", function(){ return false; });
+    trigger(link, "click");
+
+    assert.equal(location.hash, currentHash, "default action was blocked");
+
+});

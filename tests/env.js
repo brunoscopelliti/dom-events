@@ -20,6 +20,19 @@ var _ = (function() {
         return quack;
     };
 
+    function isEmptyObject_(obj) {
+        if (!obj || typeof obj != "object"){
+            return false;
+        }
+        for (var prop in obj){
+            return false;
+        }
+        if (typeof Symbol == 'function' && Object.getOwnPropertySymbols(obj).length){
+            return false;
+        }
+        return Object.prototype.toString.call(obj) == "[object Object]";
+    };
+
 
 
     function type(subject, subjectName, expectedType){
@@ -28,6 +41,10 @@ var _ = (function() {
 
     function typeFunction(subject, subjectName){
         type(subject, subjectName, "function");
+    };
+
+    function typeEmptyObject(subject, subjectName){
+        assert.ok(isEmptyObject_(subject), subjectName+" is an empty object");
     };
 
     function typeEventObject(subject){
@@ -49,6 +66,7 @@ var _ = (function() {
         one: one,
         none: none,
         typeFn: typeFunction,
+        typeEmptyObject: typeEmptyObject,
         typeEvent: typeEventObject
     };
 

@@ -3,7 +3,7 @@
  * @method Events.on
  * @signature Events.on(htmlElement[s], eventName, functionHandler);
  *
- * Events.on add an event listener on the dom elements passed as parameter.
+ * Events.on adds an event listener on the dom elements passed as parameter.
  * When the event is fired the callback is executed with the element as context (this),
  * and receive the event object as parameter, [ON01].
  *

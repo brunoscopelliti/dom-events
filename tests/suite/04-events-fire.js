@@ -3,7 +3,7 @@
  * @method Events.fire
  * @signature Events.fire(htmlElement[s], eventName, ...data);
  *
- * Events.fire simulate the triggering of a particular event, on the elements .
+ * Events.fire simulates the triggering of a particular event, on the elements .
  * It executes the handlers attached on the elements,
  * and simulate the bubbling of the event, on their parents.
  *

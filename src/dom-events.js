@@ -111,7 +111,30 @@ var Store = (function() {
 
     function del(el, type, delegator, handler) {
 
-        throw "to be implemented";
+        var listeners = eventsTable_.get(el);
+
+        if (!listeners){
+            return;
+        }
+
+        var comparison = { type: type };
+
+        if (delegator){
+            comparison.delegator = delegator;
+        }
+
+        if (typeof handler == "function"){
+            comparison.handler = handler;
+        }
+
+
+        if (listeners[type]){
+            listeners[type] = exclude_(listeners[type], compare_.bind(null, comparison));
+            if (typeof listeners[type] == "undefined" || listeners[type].length == 0){
+                delete listeners[type];
+                removeDOMListener_(el, type);
+            }
+        }
 
     }
 
@@ -170,12 +193,12 @@ var Store = (function() {
          * @function
          * @memberOf Store
          * @description
-         * @todo
+         * Remove the event listener for the event on the specified html element.
          *
          * @param {HTMLElement} el: html element for which the event listener should be removed
          * @param {String} type: the name of the event
-         * @param {String} [delegator]: @todo
-         * @param {Function} [handler]: @todo
+         * @param {String} [delegator]
+         * @param {Function} [handler]
          *
          * @return {void}
          */
@@ -211,7 +234,9 @@ var Store = (function() {
      * @function
      * @private
      * @description
-     * @todo
+     * Returns the object with the main info about the registered event listener;
+     * the object then will be stored, and kept in memory until the listener, or the
+     * html element are removed.
      *
      * @param {String} type: the name of the event
      * @param {String} delegator: selector of the html elements which should react on the event
@@ -298,6 +323,42 @@ var Store = (function() {
 
 
     /**
+     * @name exclude_
+     * @private
+     * @description
+     * The opposite of Array#filter;
+     * It returns the elements of collection that predicate does not return truthy for
+     *
+     * @param {Array} list: the array that should be reverse-filtered
+     * @param {Function} predicate: the function that should be used for the filtering
+     * @return {Array} the filtered list
+     */
+    function exclude_(list, predicate){
+
+        return list.filter((val, k, orig) => !predicate.call(this, val, k, orig));
+
+    }
+
+
+    /**
+     * @name compare_
+     * @private
+     * @description
+     * Compare the properties of the two object it receives as parameters
+     *
+     * @param {Object} comparator: the properties on the basis of which we say the two object match; it should be a subset of subjectObj's properties
+     * @param {Object} subjectObj: the object that should be compared
+     * @return {Boolean} true when the object match
+     */
+    function compare_(comparator, subjectObj){
+
+        return loopProps_(comparator, (prop, k) => typeof prop == "function" ?
+            subjectObj[k][guid] === prop[guid] : subjectObj[k] === prop);
+
+    }
+
+
+    /**
      * @name addDOMListener_
      * @function
      * @private
@@ -368,7 +429,7 @@ function domUp_(startEl, stopEl, func){
 /**
  * @name eventBase_
  * @description
- * @todo
+ * Redefine stopPropagation/preventDefault methods for our custom event object.
  */
 var eventBase_ = Object.create(null, {
 
@@ -444,7 +505,7 @@ var defaultTrigger = false;
  *
  * @param {Object} origEvent: the real event object
  *
- * @returns {Boolean} True if event propagation was not stopped
+ * @return {Boolean} True if event propagation was not stopped
  */
 function dispatch_(origEvent){
 
@@ -510,7 +571,7 @@ function dispatch_(origEvent){
  *
  * @param {Function} handler: the event handler
  * @param {HTMLElement} [target]: the element on which the event listener was registered
- * @returns {void}
+ * @return {void}
  */
 function run_(handler, target = this.currentTarget){
 
@@ -542,8 +603,15 @@ var DOMEvents = {
      * @name debug
      * @function
      * @memberOf DOMEvents
+     * @description
+     * Get the list of the event listeners registered on a particular html element.
+     * Exposes Store.get method.
+     *
+     * @param {HTMLElement} htmlElement: the html element for which to get events' information
+     * @param {String} type: the name of the event
+     * @return {Array} the list of the events set on the element
      */
-    debug: function debug() {},
+    debug: Store.get,
 
 
     /**
@@ -579,8 +647,31 @@ var DOMEvents = {
      * @name off
      * @function
      * @memberOf DOMEvents
+     * @description
+     * Remove the event listeners which match the parameters
+     * from the dom elements passed as first argument.
+     *
+     * @param {HTMLElement|HTMLCollection|NodeList} htmlElements: html elements for which the event listener will be removed
+     * @param {String} [type]: the name of the event
+     * @param {String} [delegator]
+     * @param {Function} [handler]
+     * @return {void}
      */
-    off: function off() {},
+    off: function off(htmlElements, type, delegator, handler) {
+
+        // normalize arguments
+        var boundElems = toArray_(htmlElements);
+
+        if (typeof handler == "undefined" && typeof delegator == "function"){
+            [handler, delegator] = [delegator, handler];
+        }
+
+        boundElems.forEach(function(boundEl){
+            var events = type == null ? Object.keys(Store.get(boundEl)) : [type];
+            events.forEach(eventName => Store.del(boundEl, eventName, delegator, handler));
+        });
+
+    },
 
 
     /**
@@ -622,7 +713,7 @@ var DOMEvents = {
  * @description
  * Returns the html element(s) it receives as arguments as an array
  *
- * @param {Any} htmlElements: @todo
+ * @param {Any} htmlElements: it could be the window, an Array-like with HTMLElement, more...
  * @return {Array}
  */
 function toArray_(htmlElements) {
@@ -683,6 +774,31 @@ function contains_(container, contained, strictly){
         return box.querySelectorAll(contained).length > 0;
     }
     return (!strictly || container !== contained) && container.contains(contained);
+}
+
+
+
+/**
+ * @name loopProps_
+ * @private
+ * @description
+ * Loop over the properties of the target object executing the iterator function;
+ * break the loop when iterator returns false; returns true if the loop is completed.
+ *
+ * @param {Object} obj: target object
+ * @param {Function} iterator: the function that should be executed for each property
+ * @param {Object} [context]: the context of execution for the iterator
+ * @return {Boolean} false if the loop was interrupted
+ */
+function loopProps_(obj, iterator, context = this){
+    for (let k in obj){
+        if (Object.prototype.hasOwnProperty.call(obj, k)){
+            if (iterator.call(context, obj[k], k, obj) === false){
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 

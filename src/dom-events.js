@@ -60,6 +60,34 @@ var Store = (function() {
 
 
     /**
+     * @name eventBase_
+     * @description
+     * Redefine stopPropagation/preventDefault methods for our custom event object.
+     */
+    var eventBase_ = Object.create(null, {
+
+        stopPropagation: {
+            value: function() {
+                this.isPropagationStopped = true;
+                if (this.originalEvent) {
+                    this.originalEvent.stopPropagation();
+                }
+            }
+        },
+
+        preventDefault: {
+            value: function() {
+                this.isDefaultPrevented = true;
+                if (this.originalEvent){
+                    this.originalEvent.preventDefault();
+                }
+            }
+        }
+
+    });
+
+
+    /**
      * @name special_
      * @description
      * Handler for special events
@@ -94,12 +122,20 @@ var Store = (function() {
 
 
     /**
+     * @name defaultTrigger
+     * @type Boolean
+     * @description
+     * It's true when the default action of an event was triggered
+     */
+    var defaultTrigger = false;
+
+
+    /**
      * @name eventsTable_
      * @description
      * A weak map that stores the event listeners; use html element as key
      */
     const eventsTable_ = new WeakMap();
-
 
 
     /*
@@ -284,6 +320,7 @@ var Store = (function() {
 
         var id = ++guid_;
         var isDelegate = delegator != null;
+        var fixedType = getFixedEventName_(type, isDelegate);
 
         var eventObj = Object.create(null);
 
@@ -377,6 +414,7 @@ var Store = (function() {
      * The first element of the array is the element itself; the latest is the window object.
      *
      * @param {HTMLElement}
+     *
      * @return {Array}
      */
     function getBubblingPath_(el){
@@ -403,6 +441,7 @@ var Store = (function() {
      *
      * @param {Array} list: the array that should be reverse-filtered
      * @param {Function} predicate: the function that should be used for the filtering
+     *
      * @return {Array} the filtered list
      */
     function exclude_(list, predicate){
@@ -420,6 +459,7 @@ var Store = (function() {
      *
      * @param {Object} comparator: the properties on the basis of which we say the two object match; it should be a subset of subjectObj's properties
      * @param {Object} subjectObj: the object that should be compared
+     *
      * @return {Boolean} true when the object match
      */
     function compare_(comparator, subjectObj){
@@ -428,6 +468,9 @@ var Store = (function() {
             subjectObj[k][guid] === prop[guid] : subjectObj[k] === prop);
 
     }
+
+
+
 
 
     /**
@@ -439,6 +482,7 @@ var Store = (function() {
      *
      * @param {HTMLElement} el: the html element for which add the event listener
      * @param {String} type: the name of the event
+     *
      * @return {void}
      */
     function addDOMListener_(el, type){
@@ -457,6 +501,7 @@ var Store = (function() {
      *
      * @param {HTMLElement} el: the html element for which remove the event listener
      * @param {String} type: the name of the event
+     *
      * @return {void}
      */
     function removeDOMListener_(el, type){
@@ -465,204 +510,182 @@ var Store = (function() {
 
     }
 
-}());
-
-
-
-/**
- * @name domUp_
- * @private
- * @description
- * Executes the provided function for each dom element starting from startEl,
- * till stopEl (default window).
- * If the callback return false, the execution is interrupted.
- *
- * @param {HTMLElement} startEl: html element from which the climb the DOM tree starts
- * @param {HTMLElement} stopEl: html element on which the DOM traversing should be interrupted
- * @param {Function} func: function executed for each element; receives the current element as parameter
- * @return {void}
- */
-function domUp_(startEl, stopEl, func){
-
-    if (typeof stopEl == "function"){
-        [func, stopEl] = [stopEl, window];
-    }
-
-    let visitorEl = startEl;
-    let repeat = true;
-
-    do {
-        repeat = func.call(visitorEl, visitorEl);
-    } while(repeat !== false && visitorEl != stopEl && (visitorEl = visitorEl.parentNode));
-
-}
-
-
-/**
- * @name eventBase_
- * @description
- * Redefine stopPropagation/preventDefault methods for our custom event object.
- */
-var eventBase_ = Object.create(null, {
-
-    stopPropagation: {
-        value: function() {
-            this.isPropagationStopped = true;
-            if (this.originalEvent){
-                this.originalEvent.stopPropagation();
-            }
-        }
-    },
-
-    preventDefault: {
-        value: function() {
-            this.isDefaultPrevented = true;
-            if (this.originalEvent){
-                this.originalEvent.preventDefault();
-            }
-        }
-    }
-
-});
-
-
-/**
- * @name prepareEventObject_
- * @private
- * @description
- * Prepare the custom event object
- *
- * @param {Object} origEvent: original event object
- * @return {Object} Custom event object
- */
-function prepareEventObject_(origEvent){
-
-    var event = Object.create(eventBase_);
 
     /**
-     * {Array} data
-     * Additional arguments provided to the handler
+     * @name dispatch_
+     * @private
+     * @description
+     * Is the function used as handler for the event listener;
+     * it controls the execution of all the listeners for the current event.
+     *
+     * @param {Object} origEvent: the real event object
+     *
+     * @return {Boolean} True if event propagation was not stopped
      */
-    event.data = origEvent.data || [];
+    function dispatch_(origEvent){
 
-    // @todo find out which property good to have;
-    // @todo find out a smarter way to make the copy;
-
-    event.currentTarget = origEvent.currentTarget;
-    event.target = origEvent.target;
-    event.type = origEvent.type;
-
-    if (isEventObject_(origEvent)) {
-        event.originalEvent = origEvent;
-    }
-
-    return event;
-
-}
-
-/**
- * @name defaultTrigger
- * @type Boolean
- * @description
- * It's true when the default action of an event was triggered
- */
-var defaultTrigger = false;
-
-/**
- * @name dispatch_
- * @private
- * @description
- * Is the function used as handler for the event listener;
- * it controls the execution of all the listeners for the current event.
- *
- * @param {Object} origEvent: the real event object
- *
- * @return {Boolean} True if event propagation was not stopped
- */
-function dispatch_(origEvent){
-
-    if (defaultTrigger) {
-        return;
-    }
-
-    const event = prepareEventObject_(origEvent);
-
-    var eventObjs = Store.get(event.currentTarget, event.type);
-
-
-    // here we're rising the DOM tree, starting from the target element,
-    // till we reach the element on which the event was bound.
-    // for each element we check if it is the "delegator" of a registered event;
-    // in this case the the corresponding handler object is executed.
-    domUp_(event.target, event.currentTarget, function(currElem) {
-
-        if (currElem.disabled && event.type == "click"){
+        // when the event is triggered programmatically,
+        // prevent that the execution of the default action
+        // causes a double execution of the event listener
+        if (defaultTrigger) {
             return;
         }
 
-        eventObjs.forEach(function findMatchOnTheCurrentNode_(eventObj) {
+        const event = prepareEventObject_(origEvent);
 
-            if (!eventObj.delegate || (eventObj.delegate && !contains_(currElem, eventObj.delegator))){
-                // in case the element on which the event was triggered does not contain the delegator
-                // exit soon
+        var eventObjs = Store.get(event.currentTarget, event.type);
+
+
+        // here we're rising the DOM tree, starting from the target element,
+        // till we reach the element on which the event was bound.
+        // for each element we check if it is the "delegator" of a registered event;
+        // in this case the the corresponding handler object is executed.
+        domUp_(event.target, event.currentTarget, function(currElem) {
+
+            if (currElem.disabled && event.type == "click"){
                 return;
             }
 
-            if (match_(currElem, eventObj.delegator)) {
-                run_.call(event, eventObj.handler, currElem);
-            }
+            eventObjs.forEach(function findMatchOnTheCurrentNode_(eventObj) {
+
+                if (!eventObj.delegate || (eventObj.delegate && !contains_(currElem, eventObj.delegator))){
+                    // in case the element on which the event was triggered does not contain the delegator
+                    // exit soon
+                    return;
+                }
+
+                if (match_(currElem, eventObj.delegator)) {
+                    runHandler_.call(event, eventObj.handler, currElem);
+                }
+            });
+
+            // in case the event bubbling was stopped
+            // returning false would break domUp_'s rise
+            return !event.isPropagationStopped;
+
         });
 
-        // in case the event bubbling was stopped
-        // returning false would break domUp_'s rise
+        if (event.isPropagationStopped){
+            return false;
+        }
+
+        // ... then executes the directly bound events
+
+        if (!event.currentTarget.disabled || event.type != "click"){
+            eventObjs.filter(x => !x.delegate).forEach(eventObj => runHandler_.call(event, eventObj.handler));
+        }
+
+        // return info about the propagation state
         return !event.isPropagationStopped;
 
-    });
-
-    if (event.isPropagationStopped){
-        return false;
     }
 
-    // ... then executes the directly bound events
 
-    if (!event.currentTarget.disabled || event.type != "click"){
-        eventObjs.filter(x => !x.delegate).forEach(eventObj => run_.call(event, eventObj.handler));
+    /**
+     * @name prepareEventObject_
+     * @private
+     * @description
+     * Prepare the custom event object
+     *
+     * @param {Object} origEvent: original event object
+     *
+     * @return {Object} Custom event object
+     */
+    function prepareEventObject_(origEvent){
+
+        var event = Object.create(eventBase_);
+
+        /**
+         * {Array} data
+         * Additional arguments provided to the handler
+         */
+        event.data = origEvent.data || [];
+
+        /**
+         * {Boolean} isFired
+         * Define if the event has been fired programmatically
+         */
+        event.isFired = origEvent.isFired || false;
+
+        // @todo find out which property good to have;
+        // @todo find out a smarter way to make the copy;
+
+        event.currentTarget = origEvent.currentTarget;
+        event.relatedTarget = origEvent.relatedTarget;
+        event.target = origEvent.target;
+        event.type = origEvent.type;
+
+        if (isEventObject_(origEvent)) {
+            event.originalEvent = origEvent;
+        }
+
+        return event;
+
     }
 
-    // return info about the propagation state
-    return !event.isPropagationStopped;
 
-}
+    /**
+     * @name domUp_
+     * @private
+     * @description
+     * Executes the provided function for each dom element starting from startEl,
+     * till stopEl (default window).
+     * If the callback return false, the execution is interrupted.
+     *
+     * @param {HTMLElement} startEl: html element from which the climb the DOM tree starts
+     * @param {HTMLElement} stopEl: html element on which the DOM traversing should be interrupted
+     * @param {Function} func: function executed for each element; receives the current element as parameter
+     *
+     * @return {void}
+     */
+    function domUp_(startEl, stopEl, func){
 
+        if (typeof stopEl == "function"){
+            [func, stopEl] = [stopEl, window];
+        }
 
-/**
- * @name run_
- * @private
- * @description
- * Executes the event handler, and the event default action (if any exists)
- *
- * @param {Function} handler: the event handler
- * @param {HTMLElement} [target]: the element on which the event listener was registered
- * @return {void}
- */
-function run_(handler, target = this.currentTarget){
+        let visitorEl = startEl;
+        let repeat = true;
 
-    if (handler.call(target, this) === false){
-        this.stopPropagation();
-        this.preventDefault();
+        do {
+            repeat = func.call(visitorEl, visitorEl);
+        } while(repeat !== false && visitorEl != stopEl && (visitorEl = visitorEl.parentNode));
+
     }
 
-    if (this.isDefaultPrevented){
-        return;
+
+    /**
+     * @name runHandler_
+     * @private
+     * @description
+     * Executes the event handler, and the event default action (if any exists)
+     *
+     * @param {Function} handler: the event handler
+     * @param {HTMLElement} [target]: the element on which the event listener was registered
+     *
+     * @return {void}
+     */
+    function runHandler_(handler, target = this.currentTarget){
+
+        if (handler.call(target, this) === false){
+            this.stopPropagation();
+            this.preventDefault();
+        }
+
+        if (this.isDefaultPrevented){
+            return;
+        }
+
+        if (this.isFired && typeof target[this.type] == "function"){
+            defaultTrigger = true;
+            target[this.type]();
+            defaultTrigger = false;
+        }
+
     }
 
-    if (typeof target[this.type] == "function"){
-        defaultTrigger = true;
-        target[this.type]();
-        defaultTrigger = false;
-    }
 
-}
+}());
 
 
 
@@ -681,6 +704,7 @@ var DOMEvents = {
      *
      * @param {HTMLElement} htmlElement: the html element for which to get events' information
      * @param {String} type: the name of the event
+     *
      * @return {Array} the list of the events set on the element
      */
     debug: Store.get,
@@ -697,6 +721,7 @@ var DOMEvents = {
      * @param {String} type: the name of the event
      * @param {String} delegator: the selector of the elements which should react on the event
      * @param {Function} handler: the function that should be called when the event is triggered
+     *
      * @return {void}
      */
     on: function on(htmlElements, type, delegator, handler){
@@ -727,6 +752,7 @@ var DOMEvents = {
      * @param {String} [type]: the name of the event
      * @param {String} [delegator]
      * @param {Function} [handler]
+     *
      * @return {void}
      */
     off: function off(htmlElements, type, delegator, handler) {
@@ -786,6 +812,7 @@ var DOMEvents = {
  * Returns the html element(s) it receives as arguments as an array
  *
  * @param {Any} htmlElements: it could be the window, an Array-like with HTMLElement, more...
+ *
  * @return {Array}
  */
 function toArray_(htmlElements) {
@@ -806,6 +833,7 @@ function toArray_(htmlElements) {
  * Return true if the parameter is the browser global object, window
  *
  * @param {Any} obj
+ *
  * @return {Boolean}
  */
 function isWindow_(obj){
@@ -821,6 +849,7 @@ function isWindow_(obj){
  * Returns true if 'obj' is an event object.
  *
  * @param {Object} obj: the object subject of the test
+ *
  * @return {Boolean}
  */
 function isEventObject_(obj){
@@ -838,6 +867,7 @@ function isEventObject_(obj){
  * @param {HTMLElement} container
  * @param {HTMLElement|String} contained
  * @param {Boolean} strictly: when container = contained, define if contains_ should return true or false
+ *
  * @return {Boolean}
  */
 function contains_(container, contained, strictly){
@@ -847,7 +877,6 @@ function contains_(container, contained, strictly){
     }
     return (!strictly || container !== contained) && container.contains(contained);
 }
-
 
 
 /**
@@ -860,6 +889,7 @@ function contains_(container, contained, strictly){
  * @param {Object} obj: target object
  * @param {Function} iterator: the function that should be executed for each property
  * @param {Object} [context]: the context of execution for the iterator
+ *
  * @return {Boolean} false if the loop was interrupted
  */
 function loopProps_(obj, iterator, context = this){

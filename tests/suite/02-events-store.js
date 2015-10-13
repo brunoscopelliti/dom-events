@@ -76,7 +76,7 @@ test("[ES02] del: by event's type", function (assert) {
 
 });
 
-test("[ES04] del: by event's name and delegator", function (assert) {
+test("[ES03] del: by event's name and delegator", function (assert) {
 
     setupDeleteTests.call(this);
 
@@ -90,7 +90,7 @@ test("[ES04] del: by event's name and delegator", function (assert) {
 
 });
 
-test("[ES05] del: by event's name and specified handler", function (assert) {
+test("[ES04] del: by event's name and specified handler", function (assert) {
 
     setupDeleteTests.call(this);
 
@@ -104,7 +104,7 @@ test("[ES05] del: by event's name and specified handler", function (assert) {
 
 });
 
-test("[ES06] del: by event's name with handler && delegator", function (assert) {
+test("[ES05] del: by event's name with handler && delegator", function (assert) {
 
     setupDeleteTests.call(this);
 
@@ -123,5 +123,39 @@ test("[ES06] del: by event's name with handler && delegator", function (assert) 
     Store.del(this.el, "click", ".delete-btn", noop3);
 
     assert.ok(removeSpy.calledOnce, "DOM listener was removed");
+
+});
+
+test("[ES06] del: special listeners [A]", function (assert) {
+
+    Store.add(this.el, "mouseenter", null, sinon.spy());
+    Store.add(this.el, "mouseenter", ".removed", sinon.spy());
+    Store.add(this.el, "mouseover", null, sinon.spy());
+
+    Store.del(this.el, "mouseover");
+
+    var mouseoverHandlers = Store.get(this.el, "mouseover");
+    assert.equal(mouseoverHandlers.length, 1, "Only one handler was removed");
+    assert.equal(mouseoverHandlers[0].origType, "mouseenter", "Mouseover handler was removed");
+
+    var mouseenterHandlers = Store.get(this.el, "mouseenter");
+    assert.equal(mouseenterHandlers.length, 1, "Mouseenter handler was untouched");
+
+});
+
+test("[ES07] del: special listeners [B]", function (assert) {
+
+    Store.add(this.el, "mouseenter", null, sinon.spy());
+    Store.add(this.el, "mouseenter", ".removed", sinon.spy());
+    Store.add(this.el, "mouseover", null, sinon.spy());
+
+    Store.del(this.el, "mouseenter");
+
+    var mouseoverHandlers = Store.get(this.el, "mouseover");
+    assert.equal(mouseoverHandlers.length, 1, "Only one handler was removed");
+    assert.equal(mouseoverHandlers[0].origType, "mouseover", "Mouseenter handler was removed");
+
+    var mouseenterHandlers = Store.get(this.el, "mouseenter");
+    assert.equal(mouseenterHandlers.length, 0, "Both mouseenter handlers were removed");
 
 });

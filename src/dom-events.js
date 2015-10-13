@@ -16,9 +16,11 @@
  *
  * @param {HTMLElement} elem: The html element for which the test should be executed
  * @param {String} selector: The selector that should be used for the test
+ *
  * @return {Boolean}
  */
 var match_ = (function(el) {
+
     var matcher = el.matches || el.webkitMatchesSelector || el.mozMatchesSelector || el.msMatchesSelector || el.oMatchesSelector;
 
     return function(elem, selector) {
@@ -30,6 +32,7 @@ var match_ = (function(el) {
         }
         return matcher.call(elem, selector);
     };
+
 }(document.body));
 
 
@@ -47,13 +50,47 @@ var Store = (function() {
      */
     var guid_ = 0;
 
-
     /**
      * @name guid
      * @description
-     * Symbol used to store the id of the handler's objects
+     * Symbol used to store the guid_ of the handler's objects
      */
     const guid = Symbol("EVStore_guid");
+
+
+
+    /**
+     * @name special_
+     * @description
+     * Handler for special events
+     */
+    var special_ = (function() {
+
+        var specials = {};
+
+        // mouse enter/leave do not bubble up ([MOV6])
+        // in order to simulate the bubbling we listen for mouse over/out,
+        // and then make sure that the handler is executed only when the mouse
+        // enter or leave the area of the target
+        loopProps_({mouseenter: "mouseover", mouseleave: "mouseout"}, function(fixedEvent, originalEvent) {
+            specials[originalEvent] = {
+                delegateEvent: fixedEvent,
+                decorator: function (func, handlerObj) {
+                    return function (event) {
+                        var { target, relatedTarget: related } = event;
+                        // For mouse enter/leave call the handler if related is outside the target.
+                        // NB: No relatedTarget if the mouse left/entered the browser window
+                        if (match_(target, handlerObj.delegator) && (!related || !contains_(target, related, true))) {
+                            return func.apply(target, [event, ...event.data]);
+                        }
+                    };
+                }
+            };
+        });
+
+        return specials;
+
+    }());
 
 
     /**
@@ -94,14 +131,14 @@ var Store = (function() {
             eventsTable_.set(el, {});
         }
 
-        if(!eventsTable_.get(el)[type]){
-            eventsTable_.get(el)[type] = [];
+        if(!eventsTable_.get(el)[eventObj.type]){
+            eventsTable_.get(el)[eventObj.type] = [];
         }
 
-        let handlersCount = eventsTable_.get(el)[type].push(eventObj);
+        let handlersCount = eventsTable_.get(el)[eventObj.type].push(eventObj);
 
         if (handlersCount == 1){
-            addDOMListener_(el, type);
+            addDOMListener_(el, eventObj.type);
         }
 
         return eventObj;
@@ -150,7 +187,6 @@ var Store = (function() {
         });
 
     }
-
 
 
     return {
@@ -224,10 +260,10 @@ var Store = (function() {
     };
 
 
+
     /*
      * Private methods
      */
-
 
     /**
      * @name prepareStoreObject_
@@ -241,6 +277,7 @@ var Store = (function() {
      * @param {String} type: the name of the event
      * @param {String} delegator: selector of the html elements which should react on the event
      * @param {Function} handler: the function that is executed when the event occurs
+     *
      * @return {Object}
      */
     function prepareStoreObject_(type, delegator, handler){
@@ -263,6 +300,24 @@ var Store = (function() {
         eventObj.delegate = isDelegate;
 
         /**
+         * {String} delegator
+         * The delegator selector
+         */
+        eventObj.delegator = delegator;
+
+        /**
+         * {String} origType
+         * the original event name
+         */
+        eventObj.origType = type;
+
+        /**
+         * {String} type
+         * The event name
+         */
+        eventObj.type = fixedType;
+
+        /**
          * {Function} handler
          * Function that should be executed when the event is triggered
          */
@@ -279,21 +334,38 @@ var Store = (function() {
             eventObj.handler[guid] = handler[guid];
         }
 
-        /**
-         * {String} delegator
-         * The delegator selector
-         */
-        eventObj.delegator = delegator;
-
-        /**
-         * {String} type
-         * The event name
-         */
-        eventObj.type = type;
-
-
+        // if for the current event we've setup a special handler
+        // in order to apply that strategy we've to decorate the event handler
+        if (type != fixedType){
+            if (special_[type] && typeof special_[type].decorator == "function"){
+                eventObj.handler = special_[type].decorator(handler, eventObj);
+            }
+        }
 
         return eventObj;
+    }
+
+
+    /**
+     * @name getFixedEventName_
+     * @function
+     * @private
+     * @description
+     * Return the name of the event we use to simulate another one
+     * (names may differ for events which don't bubble, or have special behaviour)
+     *
+     * @param {String} type: the name of the event
+     * @param {Boolean} [isDelegate]: true when event listener is used through event delegation
+     *
+     * @return {String}
+     */
+    function getFixedEventName_(type, isDelegate = false){
+
+        if (!isDelegate || typeof special_[type] == "undefined"){
+            return type;
+        }
+
+        return special_[type].delegateEvent;
     }
 
 

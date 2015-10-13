@@ -190,7 +190,10 @@ var Store = (function() {
             return;
         }
 
-        var comparison = { type: type };
+        // the 'comparison' object is used in order to remove
+        // only the handlers which have the same original type of the current event name,
+        // and when provided also same delegator, and handler function
+        var comparison = { origType: type };
 
         if (delegator){
             comparison.delegator = delegator;
@@ -200,14 +203,18 @@ var Store = (function() {
             comparison.handler = handler;
         }
 
+        let fixedType = getFixedEventName_(type, true);
+        let eventNames = new Set([type, fixedType]);
 
-        if (listeners[type]){
-            listeners[type] = exclude_(listeners[type], compare_.bind(null, comparison));
-            if (typeof listeners[type] == "undefined" || listeners[type].length == 0){
-                delete listeners[type];
-                removeDOMListener_(el, type);
+        eventNames.forEach(function(type) {
+            if (listeners[type]){
+                listeners[type] = exclude_(listeners[type], compare_.bind(null, comparison));
+                if (typeof listeners[type] == "undefined" || listeners[type].length == 0){
+                    delete listeners[type];
+                    removeDOMListener_(el, type);
+                }
             }
-        }
+        });
 
     }
 

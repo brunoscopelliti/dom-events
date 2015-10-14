@@ -683,7 +683,7 @@ var Store = (function() {
             return;
         }
 
-        if (this.isFired && typeof target[this.type] == "function"){
+        if (this.isFired && !isWindow_(target) && typeof target[this.type] == "function"){
             defaultTrigger = true;
             target[this.type]();
             defaultTrigger = false;

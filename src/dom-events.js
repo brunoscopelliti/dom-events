@@ -823,12 +823,16 @@ var DOMEvents = {
  * @return {Array}
  */
 function toArray_(htmlElements) {
+
     if (htmlElements == null) {
         return [];
     }
-    if (isWindow_(htmlElements) || typeof htmlElements.length == "undefined") {
+
+    // instances of HTMLFormElement have the length property; it's a read-only property returns the number of controls in the <form> element.
+    if (isWindow_(htmlElements) || typeof htmlElements.length == "undefined" || htmlElements.tagName == "FORM") {
         return [htmlElements];
     }
+
     return Array.from(htmlElements);
 }
 

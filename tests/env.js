@@ -114,12 +114,13 @@ function trigger(htmlElements, type) {
 
     return Events.fire(htmlElements, type);
 
-    var elems = htmlElements === window || typeof htmlElements.length == "undefined" ? [htmlElements] : Array.from(htmlElements);
+    var elems = htmlElements === window || typeof htmlElements.length == "undefined" || htmlElements.tagName == "FORM" ?
+        [htmlElements] : Array.from(htmlElements);
+
     elems.forEach(function(el) {
         var fakeEvent;
         switch(type){
             case "click":
-            case "submit":
             case "focus":
             case "blur":
                 return el[type]();

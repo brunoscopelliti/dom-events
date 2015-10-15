@@ -112,18 +112,22 @@ function setup(dom){
  */
 function trigger(htmlElements, type) {
 
-    return Events.fire(htmlElements, type);
+    //return Events.fire(htmlElements, type);
 
     var elems = htmlElements === window || typeof htmlElements.length == "undefined" || htmlElements.tagName == "FORM" ?
         [htmlElements] : Array.from(htmlElements);
 
     elems.forEach(function(el) {
+
         var fakeEvent;
+
         switch(type){
+
             case "click":
             case "focus":
             case "blur":
                 return el[type]();
+
             case "mousedown":
             case "mouseup":
             case "dblclick":
@@ -132,24 +136,32 @@ function trigger(htmlElements, type) {
             case "mousemove":
                 fakeEvent = new MouseEvent(type, { bubbles: true, cancelable: true, view: window });
                 break;
+
             case "mouseenter":
             case "mouseleave":
                 fakeEvent = new MouseEvent(type, { bubbles: false, cancelable: false, view: window });
                 break;
+
             case "scroll":
             case "resize":
                 fakeEvent = new UIEvent(type, { view: window });
                 break;
+
             case "keydown":
             case "keyup":
             case "keypress":
                 // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/KeyboardEvent
                 fakeEvent = new KeyboardEvent(type, { bubbles: true, cancelable: true, which: 66 });
                 break;
+
             default:
                 fakeEvent = new Event(type, { bubbles: true, cancelable: true, view: window });
                 break;
+
         }
+
         return el.dispatchEvent(fakeEvent);
+
     });
+
 }

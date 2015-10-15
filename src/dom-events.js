@@ -122,12 +122,12 @@ var Store = (function() {
 
 
     /**
-     * @name defaultTrigger
-     * @type Boolean
+     * @name firedEventType
+     * @type String
      * @description
-     * It's true when the default action of an event was triggered
+     * When the default action of an event was triggered, it contains the name of the event
      */
-    var defaultTrigger = false;
+    var firedEventType = "";
 
 
     /**
@@ -221,14 +221,25 @@ var Store = (function() {
 
     function run(el, type, data) {
 
+        var executeDefault = true;
+
         var event = { currentTarget: el, data: data, isFired: true, target: el, type: type };
         var domTree = getBubblingPath_(el);
 
-        domTree.every(function(el){
-            event.currentTarget = el;
-            return dispatch_(event);
+        domTree.every(function(currElem){
+            event.currentTarget = currElem;
+            let { isPropagationStopped, isDefaultPrevented } = dispatch_(event);
+            if (isDefaultPrevented){
+                executeDefault = false;
+            }
+            return !isPropagationStopped;
         });
 
+        if (executeDefault && !isWindow_(el) && typeof el[event.type] == "function"){
+            firedEventType = event.type;
+            el[event.type]();
+            firedEventType = "";
+        }
     }
 
 
@@ -527,15 +538,18 @@ var Store = (function() {
      *
      * @param {Object} origEvent: the real event object
      *
-     * @return {Boolean} True if event propagation was not stopped
+     * @return {Object} Information about propagation state
      */
     function dispatch_(origEvent){
 
         // when the event is triggered programmatically,
-        // prevent that the execution of the default action
-        // causes a double execution of the event listener
-        if (defaultTrigger) {
-            return;
+        // it's necessary to prevent the execution of the handler,
+        // otherwise the handlers are executed twice.
+        // we check the event type because a programmatically triggered event
+        // can be the cause of an event of different type.
+        // check test cases [FI08] to [FI11]
+        if (firedEventType == origEvent.type) {
+            return false;
         }
 
         const event = prepareEventObject_(origEvent);
@@ -562,8 +576,11 @@ var Store = (function() {
                 }
 
                 if (match_(currElem, eventObj.delegator)) {
-                    runHandler_.call(event, eventObj.handler, currElem);
+                    eventObj.currentTarget = currElem;
+                    runHandler_.call(event, eventObj);
+                    delete eventObj.currentTarget;
                 }
+
             });
 
             // in case the event bubbling was stopped
@@ -573,17 +590,17 @@ var Store = (function() {
         });
 
         if (event.isPropagationStopped){
-            return false;
+            return { isPropagationStopped: true, isDefaultPrevented: event.isDefaultPrevented };
         }
 
         // ... then executes the directly bound events
 
         if (!event.currentTarget.disabled || event.type != "click"){
-            eventObjs.filter(x => !x.delegate).forEach(eventObj => runHandler_.call(event, eventObj.handler));
+            eventObjs.filter(x => !x.delegate).forEach(runHandler_, event);
         }
 
         // return info about the propagation state
-        return !event.isPropagationStopped;
+        return { isPropagationStopped: event.isPropagationStopped, isDefaultPrevented: event.isDefaultPrevented }
 
     }
 
@@ -667,28 +684,21 @@ var Store = (function() {
      * @description
      * Executes the event handler, and the event default action (if any exists)
      *
-     * @param {Function} handler: the event handler
-     * @param {HTMLElement} [target]: the element on which the event listener was registered
+     * @param {Object} eventObj: the event object
      *
-     * @return {void}
+     * @return {Any} handlerResult: the result returned by the handler
      */
-    function runHandler_(handler, target = this.currentTarget){
+    function runHandler_(eventObj){
 
-        if (handler.call(target, this) === false){
+        var target = eventObj.currentTarget || this.currentTarget;
+        var handlerResult = eventObj.handler.call(target, this);
+
+        if (handlerResult === false){
             this.stopPropagation();
             this.preventDefault();
         }
 
-        if (this.isDefaultPrevented){
-            return;
-        }
-
-        if (this.isFired && !isWindow_(target) && typeof target[this.type] == "function"){
-            defaultTrigger = true;
-            target[this.type]();
-            defaultTrigger = false;
-        }
-
+        return handlerResult;
     }
 
 

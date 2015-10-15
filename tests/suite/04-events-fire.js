@@ -15,6 +15,14 @@ QUnit.module( "dom-events.js", {
     beforeEach: function() {
 
         var fakeDOM = "\
+            <form id='form' action='#route'>\
+                <p>Pick the gender</p>\
+                <input type='radio' name='gender' id='male' value='M' checked/>\
+                <label for='male'>man</label>\
+                <input type='radio' name='gender' id='female' value='W'/>\
+                <label for='female'>woman</label>\
+                <button type='submit'>Send</button>\
+            </form>\
             <div id='outer-box' class='box'>\
                 <button id='a-btn'>Click <b>here</b></button>\
                 <a id='a-link' href='#a-real-route'>Click here perhaps</a>\
@@ -22,14 +30,15 @@ QUnit.module( "dom-events.js", {
 
         setup(fakeDOM);
 
+        this.form = $$("#form")[0];
+        this.submitBtn = $$("#form button[type='submit']")[0];
+
         this.box = $$("#outer-box")[0];
         this.btn = $$("#a-btn")[0];
         this.link = $$("#a-link")[0];
     },
     afterEach: function() {
-
         location.hash = "";
-
     }
 });
 
@@ -142,5 +151,71 @@ test("[FI07] handler execution blocked by delegate", function (assert) {
     assert.ok(spy.calledOnce, _.one(spy.callCount));
     assert.ok(!blockedSpy.called, _.none(blockedSpy.callCount));
     assert.equal(location.href, route, "Default action was blocked");
+
+});
+
+test("[FI08] fire collateral effect click/submit", function (assert) {
+
+    var spy = sinon.spy();
+
+    Events.on(this.form, "submit", function(evt){ spy.call(this, evt); return false; });
+    Events.fire(this.submitBtn, "click");
+
+    var call = spy.getCall(0);
+
+    assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
+    assert.ok(call.calledOn(this.form), "Event handler is called with the target element as 'this'");
+    _.typeEvent(call.args[0]);
+
+});
+
+test("[FI09] fire collateral effect click/delegate submit", function (assert) {
+
+    var spy = sinon.spy();
+    var parent = $$("#test-container");
+
+    Events.on(parent, "submit", "#form", function(evt){ spy.call(this, evt); return false; });
+    Events.fire(this.submitBtn, "click");
+
+    var call = spy.getCall(0);
+
+    assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
+    assert.ok(call.calledOn(this.form), "Event handler is called with the target element as 'this'");
+    _.typeEvent(call.args[0]);
+
+});
+
+test("[FI10] fire collateral effect click/change", function (assert) {
+
+    var spy = sinon.spy();
+    var radios = $$("input[name='gender']");
+    var womanLabel = $$("label[for='female']");
+    var womanRadio = $$("input[name='gender'][value='W']");
+
+    Events.on(radios, "change", spy);
+    Events.fire(womanLabel, "click");
+
+    var call = spy.getCall(0);
+
+    assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
+    assert.ok(call.calledOn(womanRadio[0]), "Event handler is called with the target element as 'this'");
+    _.typeEvent(call.args[0]);
+
+});
+
+test("[FI11] fire collateral effect click/delegate change", function (assert) {
+
+    var spy = sinon.spy();
+    var womanLabel = $$("label[for='female']");
+    var womanRadio = $$("input[name='gender'][value='W']");
+
+    Events.on(this.form, "change", "input[name='gender']", spy);
+    Events.fire(womanLabel, "click");
+
+    var call = spy.getCall(0);
+
+    assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
+    assert.ok(call.calledOn(womanRadio[0]), "Event handler is called with the target element as 'this'");
+    _.typeEvent(call.args[0]);
 
 });

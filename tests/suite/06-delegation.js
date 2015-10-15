@@ -40,7 +40,8 @@ QUnit.module( "dom-events.js", {
                         </button>\
                     </div>\
                 </li>\
-            </ul>";
+            </ul>\
+            <p id='colophon'>If not enough click <a href='#def' id='matched-link' class='link'><span id='clicked-link' class='link'>here</span></a></p>";
 
         setup(fakeDOM);
     },
@@ -142,5 +143,30 @@ test("[DEL5] multiple matching", function (assert) {
     var call2 = spy.getCall(1);
     assert.ok(call2.calledOn(matchingEl), "Event handler is called with the delegator element as 'this'");
     _.typeEvent(call2.args[0]);
+
+});
+
+test("[DEL6] multiple matching and default action", function (assert) {
+
+    var spy = sinon.spy();
+    var boundEl = $$("#colophon");
+    var clickedEl = $$("#clicked-link")[0];
+    var matchingEl = $$("#matched-link")[0];
+
+    Events.on(boundEl, "click", ".link", spy);
+    trigger(clickedEl, "click");
+
+    assert.ok(spy.calledTwice, "Event handler is fired two times");
+    assert.equal(location.href, matchingEl.href);
+
+    var call1 = spy.getCall(0);
+    assert.ok(call1.calledOn(clickedEl), "Event handler is called with the delegator element as 'this'");
+    _.typeEvent(call1.args[0]);
+
+    var call2 = spy.getCall(1);
+    assert.ok(call2.calledOn(matchingEl), "Event handler is called with the delegator element as 'this'");
+    _.typeEvent(call2.args[0]);
+
+    location.hash = "";
 
 });

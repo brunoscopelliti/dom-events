@@ -136,9 +136,13 @@ test("[FRM6] blur", function (assert) {
 
 
 
-// @todo focus/blur does not bubble up
+/**
+ * Focus & Blur do not bubble up
+ * @todo ...
+ */
 
-xtest("[FRM7] delegate focus", function (assert) {
+
+test("[FRM7] delegate focus/blur", function (assert) {
 
     var spy = sinon.spy();
     var username = $$("#username");
@@ -146,18 +150,24 @@ xtest("[FRM7] delegate focus", function (assert) {
     Events.on(this.form, "focus", "input[type='text']", spy);
     trigger(username, "focus");
 
+    var callFocus = spy.getCall(0);
+
     assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
+    assert.ok(callFocus.calledOn(username[0]), "Event handler is called with the target element as 'this'");
+    _.typeEvent(callFocus.args[0]);
 
-});
-
-xtest("[FRM8] delegate blur", function (assert) {
-
-    var spy = sinon.spy();
-    var username = $$("#username");
+    spy.reset();
 
     Events.on(this.form, "blur", "input[type='text']", spy);
     trigger(username, "blur");
 
+    var callBlur = spy.getCall(0);
+
     assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
+    assert.ok(callBlur.calledOn(username[0]), "Event handler is called with the target element as 'this'");
+    _.typeEvent(callBlur.args[0]);
 
 });
+
+
+

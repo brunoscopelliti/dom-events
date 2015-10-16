@@ -116,6 +116,34 @@ var Store = (function() {
             };
         });
 
+
+        // @todo
+        // focus/blur do not bubble up ([FRM7], [FRM8]).
+        loopProps_({focus: "focusin", blur: "focusout"}, function(fixedEvent, originalEvent) {
+
+            /*
+             * @todo
+             *
+             */
+            function specialHandler(event){
+                Store.run(event.target, fixedEvent);
+            }
+
+
+            specials[originalEvent] = {
+                boundElement: document,
+                delegateEvent: fixedEvent,
+                setup: function() {
+                    this.boundElement.addEventListener(originalEvent, specialHandler, true);
+                },
+                teardown: function() {
+                    // @todo
+                    this.boundElement.removeEventListener(originalEvent, specialHandler, true);
+                }
+            };
+
+        });
+
         return specials;
 
     }());
@@ -163,6 +191,10 @@ var Store = (function() {
 
         var eventObj = prepareStoreObject_(type, delegator, handler);
 
+        // @todo
+        // ...
+        el = getEventsTableFixedKey_(eventObj.origType, eventObj.delegate) || el;
+
         if(!eventsTable_.has(el)){
             eventsTable_.set(el, {});
         }
@@ -173,8 +205,13 @@ var Store = (function() {
 
         let handlersCount = eventsTable_.get(el)[eventObj.type].push(eventObj);
 
-        if (handlersCount == 1){
-            addDOMListener_(el, eventObj.type);
+        if (handlersCount == 1) {
+            if (eventObj.type == eventObj.origType || typeof special_[type].setup == "undefined") {
+                addDOMListener_(el, eventObj.type);
+            }
+            else if (typeof special_[type].setup == "function") {
+                special_[type].setup();
+            }
         }
 
         return eventObj;
@@ -183,6 +220,9 @@ var Store = (function() {
 
 
     function del(el, type, delegator, handler) {
+
+        // @todo use getEventsTableFixedKey_
+        // @todo test Events.off delegate focus/blur
 
         var listeners = eventsTable_.get(el);
 
@@ -421,6 +461,19 @@ var Store = (function() {
         }
 
         return special_[type].delegateEvent;
+    }
+
+
+    /*
+     * @todo
+     */
+    function getEventsTableFixedKey_(type, isDelegate = false){
+
+        if (!isDelegate || typeof special_[type] == "undefined"){
+            return null;
+        }
+
+        return special_[type].boundElement || null;
     }
 
 
@@ -686,19 +739,16 @@ var Store = (function() {
      *
      * @param {Object} eventObj: the event object
      *
-     * @return {Any} handlerResult: the result returned by the handler
+     * @return {void}
      */
     function runHandler_(eventObj){
 
         var target = eventObj.currentTarget || this.currentTarget;
-        var handlerResult = eventObj.handler.call(target, this);
 
-        if (handlerResult === false){
+        if (eventObj.handler.call(target, this) === false){
             this.stopPropagation();
             this.preventDefault();
         }
-
-        return handlerResult;
     }
 
 

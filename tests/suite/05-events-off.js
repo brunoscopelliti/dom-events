@@ -11,6 +11,7 @@ QUnit.module( "dom-events.js", {
     beforeEach: function() {
 
         var fakeDOM = "\
+            <input id='name' value=''/>\
             <div id='box-1' class='box'>\
                 <button id='btn-1' data-val='hello'>Say <b>hello</b></button>\
                 <button id='btn-2' data-val='ciao'>Say <b>ciao</b></button>\
@@ -35,17 +36,26 @@ test("[OF01] remove all types of listeners", function (assert) {
 
     var spy1 = sinon.spy();
     var spy2 = sinon.spy();
+    var spy3 = sinon.spy();
 
     Events.on(this.btn1, "mouseover", spy1);
     Events.on(this.btn1, "mouseout", spy2);
+    Events.on(this.btn1, "mouseenter", "b", spy3);
 
     Events.off(this.btn1);
+
+    var listeners = Events.debug(this.btn1);
 
     trigger(this.btn1, "mouseover");
     assert.ok(!spy1.called, _.none("Event handler", spy1.callCount));
 
     trigger(this.btn1, "mouseout");
     assert.ok(!spy2.called, _.none("Event handler", spy2.callCount));
+
+    trigger(this.btn1.querySelector("b"), "mouseenter");
+    assert.ok(!spy3.called, _.none("Event handler", spy3.callCount));
+
+    _.typeEmptyObject(listeners, "Events list");
 
 });
 

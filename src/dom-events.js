@@ -832,7 +832,7 @@ var DOMEvents = {
         }
 
         boundElems.forEach(function(boundEl){
-            var events = type == null ? Object.keys(Store.get(boundEl)) : [type];
+            var events = type == null ? getAllEventTypes_(boundEl) : [type];
             events.forEach(eventName => Store.del(boundEl, eventName, delegator, handler));
         });
 
@@ -947,6 +947,27 @@ function contains_(container, contained, strictly){
         return box.querySelectorAll(contained).length > 0;
     }
     return (!strictly || container !== contained) && container.contains(contained);
+}
+
+
+/**
+ * @name getAllEventTypes_
+ * @private
+ * @description
+ *
+ * @todo
+ *
+ */
+function getAllEventTypes_(htmlElement){
+
+    var listeners = Store.get(htmlElement);
+    var uniqueEvents = new Set(Object.keys(listeners));
+
+    loopProps_(listeners, function(obj, evtKey) {
+        obj.filter(x => x.origType != evtKey).forEach(x => uniqueEvents.add(x.origType));
+    });
+
+    return [...uniqueEvents];
 }
 
 

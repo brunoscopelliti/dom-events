@@ -118,7 +118,7 @@ var Store = (function() {
 
 
         // @todo
-        // focus/blur do not bubble up ([FRM7], [FRM8]).
+        // focus/blur do not bubble up ([FRM7] to [FRM9]).
         loopProps_({focus: "focusin", blur: "focusout"}, function(fixedEvent, originalEvent) {
 
             /*
@@ -129,7 +129,6 @@ var Store = (function() {
                 Store.run(event.target, fixedEvent);
             }
 
-
             specials[originalEvent] = {
                 boundElement: document,
                 delegateEvent: fixedEvent,
@@ -137,7 +136,6 @@ var Store = (function() {
                     this.boundElement.addEventListener(originalEvent, specialHandler, true);
                 },
                 teardown: function() {
-                    // @todo
                     this.boundElement.removeEventListener(originalEvent, specialHandler, true);
                 }
             };
@@ -170,7 +168,7 @@ var Store = (function() {
      * Public api
      */
 
-    function get(el, type = "") {
+    function get(el, type = "", /* internal */ isFired) {
 
         var elListeners = eventsTable_.get(el);
 
@@ -178,11 +176,24 @@ var Store = (function() {
             return [];
         }
 
-        if (type){
+        if (!type){
+            return elListeners;
+        }
+
+        if (!isFired){
             return elListeners[type] || [];
         }
 
-        return elListeners;
+        // if the event was programmatically fired (isFired === true)
+        // Events.get returns also the event whose original name is <type>
+
+        let uniqueListeners = new Set(elListeners[type]);
+
+        loopProps_(elListeners, function(obj, evtKey) {
+            obj.filter(x => x.origType == type && x.origType != evtKey).forEach(x => uniqueListeners.add(x));
+        });
+
+        return [...uniqueListeners];
 
     }
 
@@ -221,8 +232,7 @@ var Store = (function() {
 
     function del(el, type, delegator, handler) {
 
-        // @todo use getEventsTableFixedKey_
-        // @todo test Events.off delegate focus/blur
+        el = getEventsTableFixedKey_(type, true) || el;
 
         var listeners = eventsTable_.get(el);
 
@@ -246,12 +256,17 @@ var Store = (function() {
         let fixedType = getFixedEventName_(type, true);
         let eventNames = new Set([type, fixedType]);
 
-        eventNames.forEach(function(type) {
-            if (listeners[type]){
-                listeners[type] = exclude_(listeners[type], compare_.bind(null, comparison));
-                if (typeof listeners[type] == "undefined" || listeners[type].length == 0){
-                    delete listeners[type];
-                    removeDOMListener_(el, type);
+        eventNames.forEach(function(currType) {
+            if (listeners[currType]){
+                listeners[currType] = exclude_(listeners[currType], compare_.bind(null, comparison));
+                if (typeof listeners[currType] == "undefined" || listeners[currType].length == 0){
+                    delete listeners[currType];
+                    if (type == fixedType || typeof special_[type].teardown == "undefined") {
+                        removeDOMListener_(el, currType);
+                    }
+                    else if (typeof special_[type].teardown == "function") {
+                        special_[type].teardown();
+                    }
                 }
             }
         });
@@ -295,6 +310,7 @@ var Store = (function() {
          *
          * @param {HTMLElement} el: the html element for which to get the events
          * @param {String} [type]: name of the event
+         * @param {Boolean} [isFired]: is true when the event was triggered by the code
          *
          * @return {Object|Array} the list of the events set on the specific element
          */
@@ -601,13 +617,14 @@ var Store = (function() {
         // we check the event type because a programmatically triggered event
         // can be the cause of an event of different type.
         // check test cases [FI08] to [FI11]
-        if (firedEventType == origEvent.type) {
+        if (isDefaultActionFired_(origEvent.type)) {
             return false;
         }
 
+
         const event = prepareEventObject_(origEvent);
 
-        var eventObjs = Store.get(event.currentTarget, event.type);
+        var eventObjs = Store.get(event.currentTarget, event.type, event.isFired);
 
 
         // here we're rising the DOM tree, starting from the target element,
@@ -654,6 +671,19 @@ var Store = (function() {
 
         // return info about the propagation state
         return { isPropagationStopped: event.isPropagationStopped, isDefaultPrevented: event.isDefaultPrevented }
+
+    }
+
+
+    /*
+     * @name isDefaultActionFired_
+     *
+     * @todo
+     *
+     */
+    function isDefaultActionFired_(type) {
+
+        return firedEventType == type || getFixedEventName_(firedEventType, true) == type;
 
     }
 

@@ -193,3 +193,30 @@ test("[FRM8] delegate focus multiple times", function (assert) {
     addListenerSpy.restore();
 
 });
+
+test("[FRM9] remove focus/blur", function (assert) {
+
+    var spy = sinon.spy();
+    var removeListenerSpy = sinon.spy(EventTarget.prototype, "removeEventListener");
+
+    var username = $$("#username");
+
+    Events.on(this.form, "focus", "input[type='text']", spy);
+    Events.on(this.form, "blur", "input[type='text']", spy);
+
+    Events.off(this.form, "focus");
+    assert.ok(removeListenerSpy.calledOnce, _.one("EventTarget#removeEventListener", removeListenerSpy.callCount));
+
+    trigger(username, "focus");
+    assert.ok(!spy.called, _.none("Event handler", spy.callCount));
+
+    removeListenerSpy.reset()
+
+    Events.off(this.form, "blur");
+    assert.ok(removeListenerSpy.calledOnce, _.one("EventTarget#removeEventListener", removeListenerSpy.callCount));
+
+    _.typeEmptyObject(Events.debug(document), "Events list");
+
+    removeListenerSpy.restore();
+
+});

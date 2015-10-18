@@ -44,8 +44,6 @@ test("[OF01] remove all types of listeners", function (assert) {
 
     Events.off(this.btn1);
 
-    var listeners = Events.debug(this.btn1);
-
     trigger(this.btn1, "mouseover");
     assert.ok(!spy1.called, _.none("Event handler", spy1.callCount));
 
@@ -55,11 +53,25 @@ test("[OF01] remove all types of listeners", function (assert) {
     trigger(this.btn1.querySelector("b"), "mouseenter");
     assert.ok(!spy3.called, _.none("Event handler", spy3.callCount));
 
-    _.typeEmptyObject(listeners, "Events list");
+    _.typeEmptyObject(Events.debug(this.btn1), "Events list");
 
 });
 
-test("[OF02] remove all listeners of specific type", function (assert) {
+test("[OF02] remove all types of listeners from document", function (assert) {
+
+    var spy1 = sinon.spy();
+    var spy2 = sinon.spy();
+
+    Events.on(document, "click", "body", spy1);
+    Events.on(document, "keyup", spy2);
+
+    Events.off(document);
+
+    _.typeEmptyObject(Events.debug(document), "Events list");
+
+});
+
+test("[OF03] remove all listeners of specific type", function (assert) {
 
     var spy1 = sinon.spy();
     var spy2 = sinon.spy();
@@ -75,7 +87,7 @@ test("[OF02] remove all listeners of specific type", function (assert) {
 
 });
 
-test("[OF03] remove listener from all elements", function (assert) {
+test("[OF04] remove listener from all elements", function (assert) {
 
     var spy1 = sinon.spy();
     var spy2 = sinon.spy();
@@ -99,7 +111,7 @@ test("[OF03] remove listener from all elements", function (assert) {
 
 });
 
-test("[OF04] remove listener by delegator", function (assert) {
+test("[OF05] remove listener by delegator", function (assert) {
 
     var spy = sinon.spy();
     var box = $$("#box-1");
@@ -120,7 +132,7 @@ test("[OF04] remove listener by delegator", function (assert) {
 
 });
 
-test("[OF05] remove listener by handler", function (assert) {
+test("[OF06] remove listener by handler", function (assert) {
 
     var spy = sinon.spy();
 
@@ -140,7 +152,7 @@ test("[OF05] remove listener by handler", function (assert) {
 
 });
 
-test("[OF06] remove delegate handler", function (assert) {
+test("[OF07] remove delegate handler", function (assert) {
 
     var spy1 = sinon.spy();
     var spy2 = sinon.spy();

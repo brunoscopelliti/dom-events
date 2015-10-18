@@ -106,6 +106,8 @@ test("[FI04] fire special event (focus)", function (assert) {
 
 });
 
+// apparently in Firefox when the default action is executed
+// does not update instantaneously
 test("[FI05] default action", function (assert) {
 
     var spy = sinon.spy();
@@ -113,8 +115,13 @@ test("[FI05] default action", function (assert) {
     Events.on(this.link, "click", spy);
     Events.fire(this.link, "click");
 
-    assert.ok(spy.calledOnce, _.one(spy.callCount));
-    assert.equal(location.href, this.link.href, "Default action performed");
+    stop();
+
+    setTimeout(function() {
+        assert.ok(spy.calledOnce, _.one(spy.callCount));
+        assert.equal(location.href, this.link.href, "Default action performed");
+        start();
+    }.bind(this), 0);
 
 });
 

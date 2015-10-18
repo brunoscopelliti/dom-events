@@ -156,17 +156,24 @@ test("[DEL6] multiple matching and default action", function (assert) {
     Events.on(boundEl, "click", ".link", spy);
     trigger(clickedEl, "click");
 
-    assert.ok(spy.calledTwice, "Event handler is fired two times");
-    assert.equal(location.href, matchingEl.href);
+    stop();
 
-    var call1 = spy.getCall(0);
-    assert.ok(call1.calledOn(clickedEl), "Event handler is called with the delegator element as 'this'");
-    _.typeEvent(call1.args[0]);
+    setTimeout(function() {
 
-    var call2 = spy.getCall(1);
-    assert.ok(call2.calledOn(matchingEl), "Event handler is called with the delegator element as 'this'");
-    _.typeEvent(call2.args[0]);
+        assert.ok(spy.calledTwice, "Event handler is fired two times");
+        assert.equal(location.href, matchingEl.href);
 
-    location.hash = "";
+        var call1 = spy.getCall(0);
+        assert.ok(call1.calledOn(clickedEl), "Event handler is called with the delegator element as 'this'");
+        _.typeEvent(call1.args[0]);
+
+        var call2 = spy.getCall(1);
+        assert.ok(call2.calledOn(matchingEl), "Event handler is called with the delegator element as 'this'");
+        _.typeEvent(call2.args[0]);
+
+        location.hash = "";
+
+        start();
+    }, 0);
 
 });

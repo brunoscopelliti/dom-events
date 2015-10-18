@@ -120,16 +120,40 @@ var Store = (function () {
             };
         });
 
+        // @todo
+        // focus/blur do not bubble up ([FRM7] to [FRM9]).
+        loopProps_({ focus: "focusin", blur: "focusout" }, function (fixedEvent, originalEvent) {
+
+            /*
+             * @todo
+             *
+             */
+            function specialHandler(event) {
+                Store.run(event.target, fixedEvent);
+            }
+
+            specials[originalEvent] = {
+                boundElement: document,
+                delegateEvent: fixedEvent,
+                setup: function setup() {
+                    this.boundElement.addEventListener(originalEvent, specialHandler, true);
+                },
+                teardown: function teardown() {
+                    this.boundElement.removeEventListener(originalEvent, specialHandler, true);
+                }
+            };
+        });
+
         return specials;
     })();
 
     /**
-     * @name defaultTrigger
-     * @type Boolean
+     * @name firedEventType
+     * @type String
      * @description
-     * It's true when the default action of an event was triggered
+     * When the default action of an event was triggered, it contains the name of the event
      */
-    var defaultTrigger = false;
+    var firedEventType = "";
 
     /**
      * @name eventsTable_
@@ -142,8 +166,8 @@ var Store = (function () {
      * Public api
      */
 
-    function get(el) {
-        var type = arguments.length <= 1 || arguments[1] === undefined ? "" : arguments[1];
+    function get(el, type, /* internal */isFired) {
+        if (type === undefined) type = "";
 
         var elListeners = eventsTable_.get(el);
 
@@ -151,16 +175,37 @@ var Store = (function () {
             return [];
         }
 
-        if (type) {
+        if (!type) {
+            return elListeners;
+        }
+
+        if (!isFired) {
             return elListeners[type] || [];
         }
 
-        return elListeners;
+        // if the event was programmatically fired (isFired === true)
+        // Events.get returns also the event whose original name is <type>
+
+        var uniqueListeners = new Set(elListeners[type]);
+
+        loopProps_(elListeners, function (obj, evtKey) {
+            obj.filter(function (x) {
+                return x.origType == type && x.origType != evtKey;
+            }).forEach(function (x) {
+                return uniqueListeners.add(x);
+            });
+        });
+
+        return [].concat(_toConsumableArray(uniqueListeners));
     }
 
     function add(el, type, delegator, handler) {
 
         var eventObj = prepareStoreObject_(type, delegator, handler);
+
+        // @todo
+        // ...
+        el = getEventsTableFixedKey_(eventObj.origType, eventObj.delegate) || el;
 
         if (!eventsTable_.has(el)) {
             eventsTable_.set(el, {});
@@ -173,13 +218,19 @@ var Store = (function () {
         var handlersCount = eventsTable_.get(el)[eventObj.type].push(eventObj);
 
         if (handlersCount == 1) {
-            addDOMListener_(el, eventObj.type);
+            if (eventObj.type == eventObj.origType || typeof special_[type].setup == "undefined") {
+                addDOMListener_(el, eventObj.type);
+            } else if (typeof special_[type].setup == "function") {
+                special_[type].setup();
+            }
         }
 
         return eventObj;
     }
 
     function del(el, type, delegator, handler) {
+
+        el = getEventsTableFixedKey_(type, true) || el;
 
         var listeners = eventsTable_.get(el);
 
@@ -203,12 +254,16 @@ var Store = (function () {
         var fixedType = getFixedEventName_(type, true);
         var eventNames = new Set([type, fixedType]);
 
-        eventNames.forEach(function (type) {
-            if (listeners[type]) {
-                listeners[type] = exclude_(listeners[type], compare_.bind(null, comparison));
-                if (typeof listeners[type] == "undefined" || listeners[type].length == 0) {
-                    delete listeners[type];
-                    removeDOMListener_(el, type);
+        eventNames.forEach(function (currType) {
+            if (listeners[currType]) {
+                listeners[currType] = exclude_(listeners[currType], compare_.bind(null, comparison));
+                if (typeof listeners[currType] == "undefined" || listeners[currType].length == 0) {
+                    delete listeners[currType];
+                    if (type == fixedType || typeof special_[type].teardown == "undefined") {
+                        removeDOMListener_(el, currType);
+                    } else if (typeof special_[type].teardown == "function") {
+                        special_[type].teardown();
+                    }
                 }
             }
         });
@@ -216,13 +271,30 @@ var Store = (function () {
 
     function run(el, type, data) {
 
+        var executeDefault = true;
+
         var event = { currentTarget: el, data: data, isFired: true, target: el, type: type };
         var domTree = getBubblingPath_(el);
 
-        domTree.every(function (el) {
-            event.currentTarget = el;
-            return dispatch_(event);
+        domTree.every(function (currElem) {
+            event.currentTarget = currElem;
+
+            var _dispatch_ = dispatch_(event);
+
+            var isPropagationStopped = _dispatch_.isPropagationStopped;
+            var isDefaultPrevented = _dispatch_.isDefaultPrevented;
+
+            if (isDefaultPrevented) {
+                executeDefault = false;
+            }
+            return !isPropagationStopped;
         });
+
+        if (executeDefault && !isWindow_(el) && typeof el[event.type] == "function") {
+            firedEventType = event.type;
+            el[event.type]();
+            firedEventType = "";
+        }
     }
 
     return {
@@ -237,8 +309,9 @@ var Store = (function () {
          *
          * @param {HTMLElement} el: the html element for which to get the events
          * @param {String} [type]: name of the event
+         * @param {Boolean} [isFired]: is true when the event was triggered by the code
          *
-         * @return {Array} the list of the events set on the specific element
+         * @return {Object|Array} the list of the events set on the specific element
          */
         get: get,
 
@@ -399,6 +472,19 @@ var Store = (function () {
         return special_[type].delegateEvent;
     }
 
+    /*
+     * @todo
+     */
+    function getEventsTableFixedKey_(type) {
+        var isDelegate = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+
+        if (!isDelegate || typeof special_[type] == "undefined") {
+            return null;
+        }
+
+        return special_[type].boundElement || null;
+    }
+
     /**
      * @name getBubblingPath_
      * @private
@@ -505,20 +591,23 @@ var Store = (function () {
      *
      * @param {Object} origEvent: the real event object
      *
-     * @return {Boolean} True if event propagation was not stopped
+     * @return {Object} Information about propagation state
      */
     function dispatch_(origEvent) {
 
-        // when the event is triggered programmatically,
-        // prevent that the execution of the default action
-        // causes a double execution of the event listener
-        if (defaultTrigger) {
-            return;
+        // when the default action of a programmatically triggered event is executed,
+        // it's necessary to prevent the execution of the handler,
+        // otherwise the handlers are executed twice.
+        // we check the event type because a programmatically triggered event
+        // can be the cause of an event of different type.
+        // check test cases [FI08] to [FI11]
+        if (isDefaultActionFired_(origEvent.type)) {
+            return false;
         }
 
         var event = prepareEventObject_(origEvent);
 
-        var eventObjs = Store.get(event.currentTarget, event.type);
+        var eventObjs = Store.get(event.currentTarget, event.type, event.isFired);
 
         // here we're rising the DOM tree, starting from the target element,
         // till we reach the element on which the event was bound.
@@ -539,7 +628,9 @@ var Store = (function () {
                 }
 
                 if (match_(currElem, eventObj.delegator)) {
-                    runHandler_.call(event, eventObj.handler, currElem);
+                    eventObj.currentTarget = currElem;
+                    runHandler_.call(event, eventObj);
+                    delete eventObj.currentTarget;
                 }
             });
 
@@ -549,7 +640,7 @@ var Store = (function () {
         });
 
         if (event.isPropagationStopped) {
-            return false;
+            return { isPropagationStopped: true, isDefaultPrevented: event.isDefaultPrevented };
         }
 
         // ... then executes the directly bound events
@@ -557,13 +648,22 @@ var Store = (function () {
         if (!event.currentTarget.disabled || event.type != "click") {
             eventObjs.filter(function (x) {
                 return !x.delegate;
-            }).forEach(function (eventObj) {
-                return runHandler_.call(event, eventObj.handler);
-            });
+            }).forEach(runHandler_, event);
         }
 
         // return info about the propagation state
-        return !event.isPropagationStopped;
+        return { isPropagationStopped: event.isPropagationStopped, isDefaultPrevented: event.isDefaultPrevented };
+    }
+
+    /*
+     * @name isDefaultActionFired_
+     *
+     * @todo
+     *
+     */
+    function isDefaultActionFired_(type) {
+
+        return firedEventType == type || getFixedEventName_(firedEventType, true) == type;
     }
 
     /**
@@ -643,27 +743,17 @@ var Store = (function () {
      * @description
      * Executes the event handler, and the event default action (if any exists)
      *
-     * @param {Function} handler: the event handler
-     * @param {HTMLElement} [target]: the element on which the event listener was registered
+     * @param {Object} eventObj: the event object
      *
      * @return {void}
      */
-    function runHandler_(handler) {
-        var target = arguments.length <= 1 || arguments[1] === undefined ? this.currentTarget : arguments[1];
+    function runHandler_(eventObj) {
 
-        if (handler.call(target, this) === false) {
+        var target = eventObj.currentTarget || this.currentTarget;
+
+        if (eventObj.handler.call(target, this) === false) {
             this.stopPropagation();
             this.preventDefault();
-        }
-
-        if (this.isDefaultPrevented) {
-            return;
-        }
-
-        if (this.isFired && !isWindow_(target) && typeof target[this.type] == "function") {
-            defaultTrigger = true;
-            target[this.type]();
-            defaultTrigger = false;
         }
     }
 })();
@@ -745,7 +835,7 @@ var DOMEvents = {
         }
 
         boundElems.forEach(function (boundEl) {
-            var events = type == null ? Object.keys(Store.get(boundEl)) : [type];
+            var events = type == null ? getAllEventTypes_(boundEl) : [type];
             events.forEach(function (eventName) {
                 return Store.del(boundEl, eventName, delegator, handler);
             });
@@ -795,12 +885,16 @@ var DOMEvents = {
  * @return {Array}
  */
 function toArray_(htmlElements) {
+
     if (htmlElements == null) {
         return [];
     }
-    if (isWindow_(htmlElements) || typeof htmlElements.length == "undefined") {
+
+    // instances of HTMLFormElement have the length property; it's a read-only property returns the number of controls in the <form> element.
+    if (isWindow_(htmlElements) || typeof htmlElements.length == "undefined" || htmlElements.tagName == "FORM") {
         return [htmlElements];
     }
+
     return Array.from(htmlElements);
 }
 
@@ -853,6 +947,30 @@ function contains_(container, contained, strictly) {
         return box.querySelectorAll(contained).length > 0;
     }
     return (!strictly || container !== contained) && container.contains(contained);
+}
+
+/**
+ * @name getAllEventTypes_
+ * @private
+ * @description
+ *
+ * @todo
+ *
+ */
+function getAllEventTypes_(htmlElement) {
+
+    var listeners = Store.get(htmlElement);
+    var uniqueEvents = new Set(Object.keys(listeners));
+
+    loopProps_(listeners, function (obj, evtKey) {
+        obj.filter(function (x) {
+            return x.origType != evtKey;
+        }).forEach(function (x) {
+            return uniqueEvents.add(x.origType);
+        });
+    });
+
+    return [].concat(_toConsumableArray(uniqueEvents));
 }
 
 /**

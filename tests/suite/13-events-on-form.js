@@ -7,7 +7,7 @@
 // https://developer.mozilla.org/en-US/docs/Web/Events
 //
 
-QUnit.module( "dom-events.js Events.on", {
+QUnit.module( "dom-events.js", {
     beforeEach: function() {
 
         var fakeDOM = "\
@@ -42,6 +42,7 @@ QUnit.module( "dom-events.js Events.on", {
     },
     afterEach: function() {
         Events.off(window);
+        Events.off(document);
     }
 });
 
@@ -169,5 +170,26 @@ test("[FRM7] delegate focus/blur", function (assert) {
 
 });
 
+test("[FRM8] delegate focus multiple times", function (assert) {
 
+    var spy = sinon.spy();
+    var addListenerSpy = sinon.spy(EventTarget.prototype, "addEventListener");
 
+    var password = $$("#password");
+
+    Events.on(this.form, "focus", "input[type='text']", spy);
+    Events.on(document.body, "focus", "input[type='password']", spy);
+
+    assert.ok(addListenerSpy.calledOnce, _.one("HTMLElement#addEventListener", addListenerSpy.callCount));
+
+    trigger(password, "focus");
+
+    var call = spy.getCall(0);
+
+    assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
+    assert.ok(call.calledOn(password[0]), "Event handler is called with the target element as 'this'");
+    _.typeEvent(call.args[0]);
+
+    addListenerSpy.restore();
+
+});

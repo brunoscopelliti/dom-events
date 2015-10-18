@@ -16,7 +16,7 @@ QUnit.module( "dom-events.js", {
 
         var fakeDOM = "\
             <form id='form' action='#route'>\
-                <p>Pick the gender</p>\
+                <p>Hi <input id='username'/>, Pick the gender</p>\
                 <input type='radio' name='gender' id='male' value='M' checked/>\
                 <label for='male'>man</label>\
                 <input type='radio' name='gender' id='female' value='W'/>\
@@ -31,6 +31,7 @@ QUnit.module( "dom-events.js", {
         setup(fakeDOM);
 
         this.form = $$("#form")[0];
+        this.username = $$("#username")[0];
         this.submitBtn = $$("#form button[type='submit']")[0];
 
         this.box = $$("#outer-box")[0];
@@ -75,7 +76,37 @@ test("[FI02] fire delegate event", function (assert) {
 
 });
 
-test("[FI03] default action", function (assert) {
+test("[FI03] fire special event (mouseenter)", function (assert) {
+
+    var spy = sinon.spy();
+
+    Events.on(this.box, "mouseenter", "#a-btn", spy);
+    Events.fire(this.box.querySelector("#a-btn"), "mouseenter");
+
+    var call = spy.getCall(0);
+
+    assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
+    assert.ok(call.calledOn(this.btn), "Event handler is called with the delegator/target element as 'this'");
+    _.typeEvent(call.args[0]);
+
+});
+
+test("[FI04] fire special event (focus)", function (assert) {
+
+    var spy = sinon.spy();
+
+    Events.on(this.form, "focus", "#username", spy);
+    Events.fire(this.form.querySelector("#username"), "focus");
+
+    var call = spy.getCall(0);
+
+    assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
+    assert.ok(call.calledOn(this.username), "Event handler is called with the delegator/target element as 'this'");
+    _.typeEvent(call.args[0]);
+
+});
+
+test("[FI05] default action", function (assert) {
 
     var spy = sinon.spy();
 
@@ -87,7 +118,7 @@ test("[FI03] default action", function (assert) {
 
 });
 
-test("[FI04] evt.stopPropagation();", function (assert) {
+test("[FI06] evt.stopPropagation();", function (assert) {
 
     var blockedSpy = sinon.spy();
     var spy = sinon.spy();
@@ -102,7 +133,7 @@ test("[FI04] evt.stopPropagation();", function (assert) {
 
 });
 
-test("[FI05] evt.preventDefault();", function (assert) {
+test("[FI07] evt.preventDefault();", function (assert) {
 
     var spy = sinon.spy();
 
@@ -118,7 +149,7 @@ test("[FI05] evt.preventDefault();", function (assert) {
 
 });
 
-test("[FI06] return false;", function (assert) {
+test("[FI08] return false;", function (assert) {
 
     var blockedSpy = sinon.spy();
     var spy = sinon.spy();
@@ -136,7 +167,7 @@ test("[FI06] return false;", function (assert) {
 
 });
 
-test("[FI07] handler execution blocked by delegate", function (assert) {
+test("[FI09] handler execution blocked by delegate", function (assert) {
 
     var blockedSpy = sinon.spy();
     var spy = sinon.spy();
@@ -154,7 +185,7 @@ test("[FI07] handler execution blocked by delegate", function (assert) {
 
 });
 
-test("[FI08] fire collateral effect click/submit", function (assert) {
+test("[FI10] fire collateral effect click/submit", function (assert) {
 
     var spy = sinon.spy();
 
@@ -169,7 +200,7 @@ test("[FI08] fire collateral effect click/submit", function (assert) {
 
 });
 
-test("[FI09] fire collateral effect click/delegate submit", function (assert) {
+test("[FI11] fire collateral effect click/delegate submit", function (assert) {
 
     var spy = sinon.spy();
     var parent = $$("#test-container");
@@ -185,7 +216,7 @@ test("[FI09] fire collateral effect click/delegate submit", function (assert) {
 
 });
 
-test("[FI10] fire collateral effect click/change", function (assert) {
+test("[FI12] fire collateral effect click/change", function (assert) {
 
     var spy = sinon.spy();
     var radios = $$("input[name='gender']");
@@ -203,7 +234,7 @@ test("[FI10] fire collateral effect click/change", function (assert) {
 
 });
 
-test("[FI11] fire collateral effect click/delegate change", function (assert) {
+test("[FI13] fire collateral effect click/delegate change", function (assert) {
 
     var spy = sinon.spy();
     var womanLabel = $$("label[for='female']");

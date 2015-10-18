@@ -6,8 +6,8 @@ QUnit.module( "dom-events.js", {
         setup('<button id="btn"><span class="icon">★</span><span class="text">Click here</span></button>');
         this.el = document.getElementById("btn");
 
-        this.addSpy = sinon.spy(HTMLElement.prototype, "addEventListener");
-        this.removeSpy = sinon.spy(HTMLElement.prototype, "removeEventListener");
+        this.addSpy = sinon.spy(EventTarget.prototype, "addEventListener");
+        this.removeSpy = sinon.spy(EventTarget.prototype, "removeEventListener");
     },
     afterEach: function() {
 

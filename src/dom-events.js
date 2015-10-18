@@ -296,7 +296,7 @@ var Store = (function() {
          * @param {HTMLElement} el: the html element for which to get the events
          * @param {String} [type]: name of the event
          *
-         * @return {Array} the list of the events set on the specific element
+         * @return {Object|Array} the list of the events set on the specific element
          */
         get: get,
 
@@ -595,7 +595,7 @@ var Store = (function() {
      */
     function dispatch_(origEvent){
 
-        // when the event is triggered programmatically,
+        // when the default action of a programmatically triggered event is executed,
         // it's necessary to prevent the execution of the handler,
         // otherwise the handlers are executed twice.
         // we check the event type because a programmatically triggered event

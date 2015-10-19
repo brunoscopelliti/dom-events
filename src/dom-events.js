@@ -62,7 +62,7 @@ var Store = (function() {
     /**
      * @name eventBase_
      * @description
-     * Redefine stopPropagation/preventDefault methods for our custom event object.
+     * Redefine stopPropagation/preventDefault methods for the custom event object.
      */
     var eventBase_ = Object.create(null, {
 
@@ -90,7 +90,8 @@ var Store = (function() {
     /**
      * @name special_
      * @description
-     * Handler for special events
+     * Define special behaviour for a set of events which
+     * have need of special attentions
      */
     var special_ = (function() {
 
@@ -117,13 +118,20 @@ var Store = (function() {
         });
 
 
-        // @todo
-        // focus/blur do not bubble up ([FRM7] to [FRM9]).
+        // focus/blur do not bubble up ([FRM7] to [FRM9])
+        // in order to simulate the bubbling we listen for the focusin/focusout
+        // on the document, during the capture phase
+        // then we use Store.run to simulate the bubbling
         loopProps_({focus: "focusin", blur: "focusout"}, function(fixedEvent, originalEvent) {
 
             /*
-             * @todo
+             * @name specialHandler
+             * @description
+             * Simulate the bubbling of the focusin/focusout events
              *
+             * @param {Object} event: the original event object
+             *
+             * @return {void}
              */
             function specialHandler(event){
                 Store.run(event.target, fixedEvent);
@@ -202,8 +210,6 @@ var Store = (function() {
 
         var eventObj = prepareStoreObject_(type, delegator, handler);
 
-        // @todo
-        // ...
         el = getEventsTableFixedKey_(eventObj.origType, eventObj.delegate) || el;
 
         if(!eventsTable_.has(el)){
@@ -376,6 +382,52 @@ var Store = (function() {
      */
 
     /**
+     * @name getFixedEventName_
+     * @function
+     * @private
+     * @description
+     * Return the name of the event we use to simulate another one
+     * (names may differ for events which don't bubble, or have special behaviour)
+     *
+     * @param {String} type: the name of the event
+     * @param {Boolean} [isDelegate]: true when event listener is used through event delegation
+     *
+     * @return {String}
+     */
+    function getFixedEventName_(type, isDelegate = false){
+
+        if (!isDelegate || typeof special_[type] == "undefined"){
+            return type;
+        }
+
+        return special_[type].delegateEvent;
+    }
+
+
+    /**
+     * @name getEventsTableFixedKey_
+     * @function
+     * @private
+     * @description
+     * Some special event listeners should be attached on particular DOM element;
+     * this function returns that element, or null for the normal events.
+     *
+     * @param {String} type: the name of the event
+     * @param {Boolean} [isDelegate]: true when event listener is used through event delegation
+     *
+     * @return {null|HTMLElement}
+     */
+    function getEventsTableFixedKey_(type, isDelegate = false){
+
+        if (!isDelegate || typeof special_[type] == "undefined"){
+            return null;
+        }
+
+        return special_[type].boundElement || null;
+    }
+
+
+    /**
      * @name prepareStoreObject_
      * @function
      * @private
@@ -458,43 +510,8 @@ var Store = (function() {
 
 
     /**
-     * @name getFixedEventName_
-     * @function
-     * @private
-     * @description
-     * Return the name of the event we use to simulate another one
-     * (names may differ for events which don't bubble, or have special behaviour)
-     *
-     * @param {String} type: the name of the event
-     * @param {Boolean} [isDelegate]: true when event listener is used through event delegation
-     *
-     * @return {String}
-     */
-    function getFixedEventName_(type, isDelegate = false){
-
-        if (!isDelegate || typeof special_[type] == "undefined"){
-            return type;
-        }
-
-        return special_[type].delegateEvent;
-    }
-
-
-    /*
-     * @todo
-     */
-    function getEventsTableFixedKey_(type, isDelegate = false){
-
-        if (!isDelegate || typeof special_[type] == "undefined"){
-            return null;
-        }
-
-        return special_[type].boundElement || null;
-    }
-
-
-    /**
      * @name getBubblingPath_
+     * @function
      * @private
      * @description
      * Returns an array with all the parent nodes of the provided element.
@@ -511,7 +528,7 @@ var Store = (function() {
             path.push(el)
         } while((el = el.parentNode));
 
-        if (path[path.length-1]===document){
+        if (path[path.length-1] === document){
             path.push(window);
         }
 
@@ -521,6 +538,7 @@ var Store = (function() {
 
     /**
      * @name exclude_
+     * @function
      * @private
      * @description
      * The opposite of Array#filter;
@@ -540,6 +558,7 @@ var Store = (function() {
 
     /**
      * @name compare_
+     * @function
      * @private
      * @description
      * Compare the properties of the two object it receives as parameters
@@ -555,9 +574,6 @@ var Store = (function() {
             subjectObj[k][guid] === prop[guid] : subjectObj[k] === prop);
 
     }
-
-
-
 
 
     /**
@@ -600,6 +616,7 @@ var Store = (function() {
 
     /**
      * @name dispatch_
+     * @function
      * @private
      * @description
      * Is the function used as handler for the event listener;
@@ -675,11 +692,18 @@ var Store = (function() {
     }
 
 
-    /*
+    /**
      * @name isDefaultActionFired_
+     * @function
+     * @private
+     * @description
+     * Check if the event currently dispatched is caused by
+     * the triggering of the event default action.
+     * In this case the dispatching should be blocked.
      *
-     * @todo
+     * @param {String} type: the name of the event
      *
+     * @return {Boolean}
      */
     function isDefaultActionFired_(type) {
 
@@ -690,6 +714,7 @@ var Store = (function() {
 
     /**
      * @name prepareEventObject_
+     * @function
      * @private
      * @description
      * Prepare the custom event object
@@ -733,9 +758,10 @@ var Store = (function() {
 
     /**
      * @name domUp_
+     * @function
      * @private
      * @description
-     * Executes the provided function for each dom element starting from startEl,
+     * Executes the provided function for each DOM element starting from startEl,
      * till stopEl (default window).
      * If the callback return false, the execution is interrupted.
      *
@@ -763,6 +789,7 @@ var Store = (function() {
 
     /**
      * @name runHandler_
+     * @function
      * @private
      * @description
      * Executes the event handler, and the event default action (if any exists)
@@ -812,7 +839,7 @@ var DOMEvents = {
      * @function
      * @memberOf DOMEvents
      * @description
-     * Add an event listener on the dom elements passed as parameter.
+     * Add an event listener on the DOM elements passed as parameter.
      *
      * @param {HTMLElement|HTMLCollection|NodeList} htmlElements: html elements for which the event listener will be set
      * @param {String} type: the name of the event
@@ -843,7 +870,7 @@ var DOMEvents = {
      * @memberOf DOMEvents
      * @description
      * Remove the event listeners which match the parameters
-     * from the dom elements passed as first argument.
+     * from the DOM elements passed as first argument.
      *
      * @param {HTMLElement|HTMLCollection|NodeList} htmlElements: html elements for which the event listener will be removed
      * @param {String} [type]: the name of the event
@@ -904,6 +931,7 @@ var DOMEvents = {
 
 /**
  * @name toArray_
+ * @function
  * @private
  * @description
  * Returns the html element(s) it receives as arguments as an array
@@ -929,6 +957,7 @@ function toArray_(htmlElements) {
 
 /**
  * @name isWindow_
+ * @function
  * @private
  * @description
  * Return true if the parameter is the browser global object, window
@@ -944,6 +973,7 @@ function isWindow_(obj){
 
 /**
  * @name isEventObject_
+ * @function
  * @private
  * @description
  * Determine if the parameter provided is an event object (instanceof Event).
@@ -960,6 +990,7 @@ function isEventObject_(obj){
 
 /**
  * @name contains_
+ * @function
  * @private
  * @description
  * Returns a Boolean value indicating whether 'contained' is a descendant of 'container'.
@@ -982,11 +1013,14 @@ function contains_(container, contained, strictly){
 
 /**
  * @name getAllEventTypes_
+ * @function
  * @private
  * @description
+ * Return the list of all the event types set on a particular DOM element.
  *
- * @todo
+ * @param {HTMLElement} htmlElement: the element on which search for the listeners
  *
+ * @return {Array} the list of all the events set on a particular DOM element
  */
 function getAllEventTypes_(htmlElement){
 

@@ -43,6 +43,8 @@ QUnit.module( "dom-events.js", {
     afterEach: function() {
         Events.off(window);
         Events.off(document);
+        addListenerSpy.reset();
+        delListenerSpy.reset();
     }
 });
 
@@ -168,17 +170,30 @@ test("[FRM7] delegate focus/blur", function (assert) {
 
 });
 
+
+
+
+// @todo explain the reason for this... now i've not the time
+function getDocSpy_(type){
+    try{
+        return sinon.spy(Document.prototype, type+"EventListener");
+    }
+    catch (e){
+        return type == "add" ? addListenerSpy : delListenerSpy;
+    }
+}
+
 test("[FRM8] delegate focus multiple times", function (assert) {
 
     var spy = sinon.spy();
-    var addListenerSpy = sinon.spy(EventTarget.prototype, "addEventListener");
+    var addDocListenerSpy = getDocSpy_("add");
 
     var password = $$("#password");
 
     Events.on(this.form, "focus", "input[type='text']", spy);
     Events.on(document.body, "focus", "input[type='password']", spy);
 
-    assert.ok(addListenerSpy.calledOnce, _.one("HTMLElement#addEventListener", addListenerSpy.callCount));
+    assert.ok(addDocListenerSpy.calledOnce, _.one("Document#addEventListener", addDocListenerSpy.callCount));
 
     trigger(password, "focus");
 
@@ -188,14 +203,14 @@ test("[FRM8] delegate focus multiple times", function (assert) {
     assert.ok(call.calledOn(password[0]), "Event handler is called with the target element as 'this'");
     _.typeEvent(call.args[0]);
 
-    addListenerSpy.restore();
+    addDocListenerSpy.restore();
 
 });
 
 test("[FRM9] remove focus/blur", function (assert) {
 
     var spy = sinon.spy();
-    var removeListenerSpy = sinon.spy(EventTarget.prototype, "removeEventListener");
+    var delDocListenerSpy = getDocSpy_("remove");
 
     var username = $$("#username");
 
@@ -203,18 +218,18 @@ test("[FRM9] remove focus/blur", function (assert) {
     Events.on(this.form, "blur", "input[type='text']", spy);
 
     Events.off(this.form, "focus");
-    assert.ok(removeListenerSpy.calledOnce, _.one("EventTarget#removeEventListener", removeListenerSpy.callCount));
+    assert.ok(delDocListenerSpy.calledOnce, _.one("Document#removeEventListener", delDocListenerSpy.callCount));
 
     trigger(username, "focus");
     assert.ok(!spy.called, _.none("Event handler", spy.callCount));
 
-    removeListenerSpy.reset()
+    delDocListenerSpy.reset()
 
     Events.off(this.form, "blur");
-    assert.ok(removeListenerSpy.calledOnce, _.one("EventTarget#removeEventListener", removeListenerSpy.callCount));
+    assert.ok(delDocListenerSpy.calledOnce, _.one("Document#removeEventListener", delDocListenerSpy.callCount));
 
     _.typeEmptyObject(Events.debug(document), "Events list");
 
-    removeListenerSpy.restore();
+    delDocListenerSpy.restore();
 
 });

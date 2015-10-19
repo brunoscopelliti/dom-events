@@ -1,5 +1,5 @@
 {
-  "name": "dom-events",
+  "name": "dom-events-delegation",
   "version": "0.0.1",
   "description": "A JavaScript event handler micro library.",
   "main": "dom-events.js",
@@ -14,7 +14,8 @@
   "keywords": [
     "dom",
     "events",
-    "delegation"
+    "delegation",
+    "micro-framework"
   ],
   "author": "Bruno Scopelliti",
   "license": "MIT",

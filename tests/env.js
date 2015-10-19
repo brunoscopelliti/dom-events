@@ -1,6 +1,17 @@
 
 var exports = {};
 
+// EventTarget is undefined in Safari
+if (typeof EventTarget != "undefined"){
+    window.addListenerSpy = sinon.spy(EventTarget.prototype, "addEventListener");
+    window.delListenerSpy = sinon.spy(EventTarget.prototype, "removeEventListener");
+}
+else{
+    window.addListenerSpy = sinon.spy(Element.prototype, "addEventListener");
+    window.delListenerSpy = sinon.spy(Element.prototype, "removeEventListener");
+}
+
+
 window.$$ = document.querySelectorAll.bind(document);
 
 var _ = (function() {

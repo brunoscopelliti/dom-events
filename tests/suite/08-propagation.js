@@ -227,7 +227,9 @@ test("[EP09] stop event propagation (with return false)", function (assert) {
 
 });
 
-// @todo It's possible to implement a jQuery style event.stopImmediatePropagation method
+// It's possible to implement a jQuery style event.stopImmediatePropagation method;
+// However, since until now I've never had the need to use jQuery's stopImmediatePropagation,
+// I am not really interested in having this feature in dom-events.
 test("[EP10] stop event propagation has no effect once the event has reached its target", function (assert) {
 
     var spyOne = sinon.spy();

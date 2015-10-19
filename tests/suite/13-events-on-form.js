@@ -135,13 +135,11 @@ test("[FRM6] blur", function (assert) {
 
 });
 
-
-
 /**
  * Focus & Blur do not bubble up
- * @todo ...
+ * In order to simulate the bubbling we listen for the focusin/focusout
+ * on the document, during the capture phase, then we use Store.run to simulate the bubbling
  */
-
 
 test("[FRM7] delegate focus/blur", function (assert) {
 

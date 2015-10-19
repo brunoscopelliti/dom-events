@@ -739,9 +739,6 @@ var Store = (function() {
          */
         event.isFired = origEvent.isFired || false;
 
-        // @todo find out which property good to have;
-        // @todo find out a smarter way to make the copy;
-
         event.currentTarget = origEvent.currentTarget;
         event.relatedTarget = origEvent.relatedTarget;
         event.target = origEvent.target;

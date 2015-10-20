@@ -99,6 +99,9 @@ var Store = (function () {
 
         var specials = {};
 
+        // load event does not bubble up
+        specials["load"] = { bubbles: false };
+
         // mouse enter/leave do not bubble up ([MOV6])
         // in order to simulate the bubbling we listen for mouse over/out,
         // and then make sure that the handler is executed only when the mouse
@@ -106,6 +109,7 @@ var Store = (function () {
         loopProps_({ mouseenter: "mouseover", mouseleave: "mouseout" }, function (fixedEvent, originalEvent) {
             specials[originalEvent] = {
                 delegateEvent: fixedEvent,
+                bubbles: true,
                 decorator: function decorator(func, handlerObj) {
                     return function (event) {
                         var target = event.target;
@@ -143,6 +147,7 @@ var Store = (function () {
             specials[originalEvent] = {
                 boundElement: document,
                 delegateEvent: fixedEvent,
+                bubbles: true,
                 setup: function setup() {
                     this.boundElement.addEventListener(originalEvent, specialHandler, true);
                 },
@@ -280,7 +285,7 @@ var Store = (function () {
         var executeDefault = true;
 
         var event = { currentTarget: el, data: data, isFired: true, target: el, type: type };
-        var domTree = getBubblingPath_(el);
+        var domTree = typeof special_[type] == "undefined" || special_[type].bubbles ? getBubblingPath_(el) : [el];
 
         domTree.every(function (currElem) {
             event.currentTarget = currElem;
@@ -514,6 +519,7 @@ var Store = (function () {
      * @return {Array}
      */
     function getBubblingPath_(el) {
+
         var path = [];
 
         do {
@@ -892,9 +898,6 @@ var DOMEvents = {
         var elems = toArray_(htmlElements);
 
         elems.forEach(function (el) {
-
-            // @todo check if the event bubbles up
-
             Store.run(el, type, data);
         });
     }

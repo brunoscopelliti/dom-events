@@ -170,23 +170,10 @@ test("[FRM7] delegate focus/blur", function (assert) {
 
 });
 
-
-
-
-// @todo explain the reason for this... now i've not the time
-function getDocSpy_(type){
-    try{
-        return sinon.spy(Document.prototype, type+"EventListener");
-    }
-    catch (e){
-        return type == "add" ? addListenerSpy : delListenerSpy;
-    }
-}
-
 test("[FRM8] delegate focus multiple times", function (assert) {
 
     var spy = sinon.spy();
-    var addDocListenerSpy = getDocSpy_("add");
+    var addDocListenerSpy = addListenerSpy;
 
     var password = $$("#password");
 
@@ -210,7 +197,7 @@ test("[FRM8] delegate focus multiple times", function (assert) {
 test("[FRM9] remove focus/blur", function (assert) {
 
     var spy = sinon.spy();
-    var delDocListenerSpy = getDocSpy_("remove");
+    var delDocListenerSpy = delListenerSpy;
 
     var username = $$("#username");
 

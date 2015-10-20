@@ -1,3 +1,4 @@
+var Symbol;
 if (!Symbol) {
     Symbol = (function(Object){
 

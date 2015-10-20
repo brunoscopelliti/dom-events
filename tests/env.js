@@ -124,7 +124,7 @@ function setup(dom){
  */
 function trigger(htmlElements, type) {
 
-     return Events.fire(htmlElements, type);
+    // return Events.fire(htmlElements, type);
 
     var elems = htmlElements === window || typeof htmlElements.length == "undefined" || htmlElements.tagName == "FORM" ?
         [htmlElements] : Array.from(htmlElements);

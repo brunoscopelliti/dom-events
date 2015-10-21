@@ -15,7 +15,7 @@ if (!Symbol) {
             var __symbol__ = prefix + id++;
             defineProperty(
                 ObjectPrototype,
-                this._ = __symbol__,
+                this.__symb__ = __symbol__,
                 {
                     enumerable: false,
                     configurable: false,
@@ -37,7 +37,7 @@ if (!Symbol) {
             configurable: false,
             writable: false,
             value: function toString() {
-                return this._;
+                return __symb__;
             }
         });
 

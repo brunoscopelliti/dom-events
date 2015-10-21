@@ -12,10 +12,9 @@ else{
     window.delListenerSpy = sinon.spy(Node.prototype, "removeEventListener");
 }
 
-
 window.$$ = document.querySelectorAll.bind(document);
 
-var _ = (function() {
+window._ = (function() {
 
     var assert = QUnit.assert;
 
@@ -30,7 +29,7 @@ var _ = (function() {
             if (typeof subject[prop] == "undefined"){ quack = false; }
         });
         return quack;
-    };
+    }
 
     function isEmptyObject_(obj) {
         if (!obj || typeof obj != "object"){
@@ -39,39 +38,37 @@ var _ = (function() {
         for (var prop in obj){
             return false;
         }
-        if (typeof Symbol == 'function' && Object.getOwnPropertySymbols(obj).length){
-            return false;
-        }
+        // there is no need for this in my use case,
+        // if (typeof Symbol == 'function' && Object.getOwnPropertySymbols(obj).length){
+        //     return false;
+        // }
         return Object.prototype.toString.call(obj) == "[object Object]";
-    };
-
-
+    }
 
     function type(subject, subjectName, expectedType){
         assert.equal(typeof subject, expectedType, subjectName + " is " + expectedType);
-    };
+    }
 
     function typeFunction(subject, subjectName){
         type(subject, subjectName, "function");
-    };
+    }
 
     function typeEmptyObject(subject, subjectName){
         assert.ok(isEmptyObject_(subject), subjectName+" is an empty object");
-    };
+    }
 
     function typeEventObject(subject){
         var isEventObject = subject.originalEvent instanceof Event || duckCheck_(subject, ["currentTarget", "target", "type"]);
         assert.ok(isEventObject, "The parameter is an event object");
-    };
+    }
 
     function one(subjectName, callNumber){
         return dict_.once.replace("${who}", subjectName).replace("${n}", callNumber);
-    };
+    }
 
     function none(subjectName, callNumber){
         return dict_.never.replace("${who}", subjectName).replace("${n}", callNumber);
-    };
-
+    }
 
 
     var exports_ = {
@@ -85,7 +82,6 @@ var _ = (function() {
     return exports_;
 
 }());
-
 
 
 /**

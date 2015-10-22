@@ -6,9 +6,6 @@
 // https://developer.mozilla.org/en-US/docs/Web/Events
 //
 
-var Events = exports["default"];
-var Store = exports.EventsStore;
-
 
 /**
  * @test interface

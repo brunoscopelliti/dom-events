@@ -16,6 +16,7 @@ module.exports = function(config) {
             'tests/polyfill/*.js',
             'tests/env.js',
             'dist/dom-events.js',
+            'tests/importer.js',
             'tests/suite/*.js'
         ],
 

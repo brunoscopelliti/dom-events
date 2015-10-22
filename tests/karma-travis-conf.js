@@ -21,6 +21,12 @@ var customLaunchers = {
     'safari': {
         base: 'SauceLabs',
         browserName: 'safari',
+        version: '8.1',
+        platform: 'OS X 10.11'
+    },
+    'safari-prev': {
+        base: 'SauceLabs',
+        browserName: 'safari',
         version: '8.0',
         platform: 'OS X 10.10'
     },

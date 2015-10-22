@@ -193,20 +193,22 @@ var Store = (function() {
             return elListeners;
         }
 
+        let listenersByType = elListeners[type] || [];
+
         if (!isFired){
-            return elListeners[type] || [];
+            return listenersByType;
         }
 
         // if the event was programmatically fired (isFired === true)
         // Events.get returns also the event whose original name is <type>
 
-        let uniqueListeners = new Set(elListeners[type]);
-
         loopProps_(elListeners, function(obj, evtKey) {
-            obj.filter(x => x.origType == type && x.origType != evtKey).forEach(x => uniqueListeners.add(x));
+            var listenerMatchingOrigType = obj.filter(x => x.origType == type && x.origType != evtKey);
+            listenerMatchingOrigType.reduce((res, currEl) =>
+                !~res.indexOf(currEl) ? (res.push(currEl), res) : res, listenersByType);
         });
 
-        return [...uniqueListeners];
+        return listenersByType;
 
     }
 
@@ -265,7 +267,7 @@ var Store = (function() {
         }
 
         let fixedType = getFixedEventName_(type, true);
-        let eventNames = new Set([type, fixedType]);
+        let eventNames = type == fixedType ? [type] : [type, fixedType];
 
         eventNames.forEach(function(currType) {
             if (listeners[currType]){
@@ -649,7 +651,6 @@ var Store = (function() {
 
         var eventObjs = Store.get(event.currentTarget, event.type, event.isFired);
 
-
         // here we're rising the DOM tree, starting from the target element,
         // till we reach the element on which the event was bound.
         // for each element we check if it is the "delegator" of a registered event;
@@ -1024,13 +1025,16 @@ function contains_(container, contained, strictly){
 function getAllEventTypes_(htmlElement){
 
     var listeners = Store.get(htmlElement);
-    var uniqueEvents = new Set(Object.keys(listeners));
+    var uniqueEvents = Object.keys(listeners);
 
     loopProps_(listeners, function(obj, evtKey) {
-        obj.filter(x => x.origType != evtKey).forEach(x => uniqueEvents.add(x.origType));
+        var listenersWithTypeChanged = obj.filter(x => x.origType != evtKey)
+        listenersWithTypeChanged.reduce((res, currEl) =>
+            !~res.indexOf(currEl) ? (res.push(currEl.origType), res) : res, uniqueEvents);
     });
 
-    return [...uniqueEvents];
+    return uniqueEvents;
+
 }
 
 

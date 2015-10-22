@@ -192,24 +192,25 @@ var Store = (function () {
             return elListeners;
         }
 
+        var listenersByType = elListeners[type] || [];
+
         if (!isFired) {
-            return elListeners[type] || [];
+            return listenersByType;
         }
 
         // if the event was programmatically fired (isFired === true)
         // Events.get returns also the event whose original name is <type>
 
-        var uniqueListeners = new Set(elListeners[type]);
-
         loopProps_(elListeners, function (obj, evtKey) {
-            obj.filter(function (x) {
+            var listenerMatchingOrigType = obj.filter(function (x) {
                 return x.origType == type && x.origType != evtKey;
-            }).forEach(function (x) {
-                return uniqueListeners.add(x);
             });
+            listenerMatchingOrigType.reduce(function (res, currEl) {
+                return ! ~res.indexOf(currEl) ? (res.push(currEl), res) : res;
+            }, listenersByType);
         });
 
-        return [].concat(_toConsumableArray(uniqueListeners));
+        return listenersByType;
     }
 
     function add(el, type, delegator, handler) {
@@ -263,7 +264,7 @@ var Store = (function () {
         }
 
         var fixedType = getFixedEventName_(type, true);
-        var eventNames = new Set([type, fixedType]);
+        var eventNames = type == fixedType ? [type] : [type, fixedType];
 
         eventNames.forEach(function (currType) {
             if (listeners[currType]) {
@@ -997,17 +998,18 @@ function contains_(container, contained, strictly) {
 function getAllEventTypes_(htmlElement) {
 
     var listeners = Store.get(htmlElement);
-    var uniqueEvents = new Set(Object.keys(listeners));
+    var uniqueEvents = Object.keys(listeners);
 
     loopProps_(listeners, function (obj, evtKey) {
-        obj.filter(function (x) {
+        var listenersWithTypeChanged = obj.filter(function (x) {
             return x.origType != evtKey;
-        }).forEach(function (x) {
-            return uniqueEvents.add(x.origType);
         });
+        listenersWithTypeChanged.reduce(function (res, currEl) {
+            return ! ~res.indexOf(currEl) ? (res.push(currEl.origType), res) : res;
+        }, uniqueEvents);
     });
 
-    return [].concat(_toConsumableArray(uniqueEvents));
+    return uniqueEvents;
 }
 
 /**

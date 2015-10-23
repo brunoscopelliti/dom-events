@@ -173,3 +173,73 @@ function trigger(htmlElements, type) {
     });
 
 }
+
+
+(function() {
+
+    // work around to make the test run
+    // on old version (IE11) internet explorer
+
+    if (typeof MouseEvent !== "function") {
+        window.MouseEvent = function (type, dict){
+            var event = document.createEvent('MouseEvents');
+            event.initMouseEvent(
+                type,
+                (typeof dict.bubbles == "undefined") ? true : !!dict.bubbles,
+                (typeof dict.cancelable == "undefined") ? false : !!dict.cancelable,
+                dict.view || window,
+                dict.detail | 0,
+                dict.screenX | 0,
+                dict.screenY | 0,
+                dict.clientX | 0,
+                dict.clientY | 0,
+                !!dict.ctrlKey,
+                !!dict.altKey,
+                !!dict.shiftKey,
+                !!dict.metaKey,
+                dict.button | 0,
+                dict.relatedTarget || null
+            );
+            return event;
+        }
+    }
+
+    if (typeof KeyboardEvent !== "function"){
+        window.KeyboardEvent = function (type, dict){
+            var event = document.createEvent('KeyboardEvent');
+            event.initKeyboardEvent(
+                type,
+                (typeof dict.bubbles == "undefined") ? true : !!dict.bubbles,
+                (typeof dict.cancelable == "undefined") ? false : !!dict.cancelable,
+                dict.view || window,
+                !!dict.ctrlKey,
+                !!dict.altKey,
+                !!dict.shiftKey,
+                !!dict.metaKey,
+                dict.keyCode,
+                dict.charCode
+            );
+            return event;
+        }
+
+    }
+
+    if (typeof UIEvent !== "function"){
+        window.UIEvent = function(type, dict) {
+            var event = document.createEvent("UIEvent");
+            event.initUIEvent(type, !!dict.bubbles, !!dict.cancellable, dict.view, 1);
+            return event;
+        }
+    }
+
+    if (typeof Event !== "function"){
+        var eventProto = Event.prototype; // Object.getPrototypeOf(Event); oO
+        window.Event = function(type, dict) {
+            var event = document.createEvent("Event");
+            event.initEvent(type, !!dict.bubbles, !!dict.cancellable);
+            return event;
+        }
+        window.Event.prototype = eventProto;
+    }
+
+}());

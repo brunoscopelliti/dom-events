@@ -36,7 +36,7 @@ var customLaunchers = {
         version: '20.10240',
         platform: 'Windows 10'
     },
-    /* 'ie10': {
+    'ie10': {
         base: 'SauceLabs',
         browserName: 'internet explorer',
         version: '10.0',
@@ -47,7 +47,7 @@ var customLaunchers = {
         browserName: 'internet explorer',
         version: '11.0',
         platform: 'windows 10'
-    }, */
+    },
     'iphone': {
         base: 'SauceLabs',
         browserName: 'iphone',

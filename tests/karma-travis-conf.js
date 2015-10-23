@@ -21,7 +21,7 @@ var customLaunchers = {
     'safari': {
         base: 'SauceLabs',
         browserName: 'safari',
-        version: '8.1',
+        version: '9.0',
         platform: 'OS X 10.11'
     },
     'safari-prev': {
@@ -39,13 +39,13 @@ var customLaunchers = {
     /* 'ie10': {
         base: 'SauceLabs',
         browserName: 'internet explorer',
-        version: '10',
+        version: '10.0',
         platform: 'windows 7'
     },
     'ie11': {
         base: 'SauceLabs',
         browserName: 'internet explorer',
-        version: '11',
+        version: '11.0',
         platform: 'windows 10'
     }, */
     'iphone': {
@@ -56,14 +56,14 @@ var customLaunchers = {
         version: '9.0',
         platform: 'OS X 10.10'
     },
-    'ipad': {
+    /*'ipad': {
         base: 'SauceLabs',
         browserName: 'iphone',
         deviceName: 'iPad Retina',
         deviceOrientation: 'portrait',
         version: '9.0',
         platform: 'OS X 10.10'
-    },
+    },*/
     'android': {
         base: 'SauceLabs',
         browserName: 'android',

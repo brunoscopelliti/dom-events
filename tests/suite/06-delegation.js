@@ -107,7 +107,7 @@ test("[DEL3] delegate event listener on the document", function (assert) {
 // @bug https://bugzilla.mozilla.org/show_bug.cgi?id=218093
 // @description if the target is contained by a disabled element, the event in Firefox does not bubble up
 // @demo http://codepen.io/brunoscopelliti/pen/dYGbWz
-test("[DEL4] delegator is disabled", function (assert) {
+xtest("[DEL4] delegator is disabled", function (assert) {
 
     var spyBtn = sinon.spy();
     var spyChild = sinon.spy();

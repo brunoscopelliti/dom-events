@@ -1,6 +1,6 @@
 {
   "name": "dom-events-delegation",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "A JavaScript event handler micro library.",
   "main": "dom-events.js",
   "scripts": {

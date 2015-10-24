@@ -4,7 +4,7 @@
  * @author Bruno Scopelliti <me@brunoscopelliti.com>
  * @license MIT
  *
- * @module src/dom-events
+ * @module src/dom-events-delegation
  */
 
 /**

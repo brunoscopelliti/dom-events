@@ -120,6 +120,10 @@ Events.fire(btn, 'click');
 
 // ... and we can also pass additional custom data, which will be available as arguments in the event handler function.
 
+Events.on(btn, 'click', function(evt, ...args) {
+ console.log(args); // ['foo', 'bar']
+});
+
 Events.fire(btn, 'click', 'foo', 'bar');
 ```
 

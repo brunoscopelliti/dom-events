@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>Dom-events by brunoscopelliti</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Dom-events</h1>
+        <h2>A JavaScript event handler micro library.</h2>
+        <a href="https://github.com/brunoscopelliti/dom-events" class="button"><small>View project on</small> GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <p>A JavaScript delegation event micro library.</p>
+
+<h2>
+<a id="about" class="anchor" href="#about" aria-hidden="true"><span class="octicon octicon-link"></span></a>about</h2>
+
+<p>dom-events (dom-events-delegation on npm) is written as an ECMAScript2015 module, and uses ECMAScript2015 features such destructuring, default values, weak map; it's possible to use in the browser today through the combo jspm package loader and babeljs.</p>
+
+<p>When the module is transpiled (with some polyfill installed such as <code>Array.from</code>, <code>Symbol</code>, <code>Weakmap</code>), it proved to work until IE10 (never tested with IE9). </p>
+
+<p>In case you need another module format there are several projects which can do automatically the conversion.</p>
+
+<h2>
+<a id="install" class="anchor" href="#install" aria-hidden="true"><span class="octicon octicon-link"></span></a>install</h2>
+
+<pre><code>npm install --save dom-events-delegation
+</code></pre>
+
+<h2>
+<a id="ci-report" class="anchor" href="#ci-report" aria-hidden="true"><span class="octicon octicon-link"></span></a>CI report</h2>
+
+<p><a href="https://saucelabs.com/u/brunoscopelliti"><img src="https://saucelabs.com/browser-matrix/brunoscopelliti.svg" alt="Sauce Test Status"></a></p>
+
+<p><strong>known issues</strong></p>
+
+<ul>
+<li><p><code>[DEL4]</code> fails on Firefox, cause <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=218093">https://bugzilla.mozilla.org/show_bug.cgi?id=218093</a> . Same issue affects jQuery too.</p></li>
+<li><p>CI skips tests, about focus/blur events, from <code>[FRM5]</code> to <code>[FRM8]</code> cause when launched headless they fail on Firefox... however they pass when launched in the browser.</p></li>
+</ul>
+
+<h2>
+<a id="api-and-usages" class="anchor" href="#api-and-usages" aria-hidden="true"><span class="octicon octicon-link"></span></a>api and usages</h2>
+
+<p>For the examples in the current section I consider the following DOM tree:</p>
+
+<pre><code>&lt;section id="main"&gt;
+ &lt;h1&gt;Choose a pillow:&lt;/h1&gt;
+ &lt;ul&gt;
+  &lt;li&gt;
+   &lt;input id="opt1" type="radio" name="colour" value="red"/&gt;
+   &lt;label for="opt1"&gt;red&lt;/label&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+   &lt;input id="opt2" type="radio" name="colour" value="blue"/&gt;
+   &lt;label for="opt2"&gt;blue&lt;/label&gt;
+  &lt;/li&gt;  
+ &lt;/ul&gt;
+ &lt;button id="btn"&gt;Pick the pillow&lt;/button&gt;
+&lt;/section&gt;
+</code></pre>
+
+<p><strong>Events.on</strong></p>
+
+<pre><code>on: function on(htmlElements, type, [delegator, ] handler);
+
+ - {HTMLElement|HTMLCollection|NodeList} htmlElements: html elements for which the event listener will be set
+ - {String} type: the name of the event
+ - {String} [delegator]: the selector of the elements which should react on the event
+ - {Function} handler: the function that should be called when the event is triggered
+</code></pre>
+
+<p>Add an event listener on the DOM elements passed as parameter.</p>
+
+<p>If we want to add a listener on the button, we could simply write something like:</p>
+
+<pre><code>var btn = document.getElementById("btn");
+// not really need this step (http://www.2ality.com/2012/08/ids-are-global.html), but for clarity sake.
+
+Events.on(btn, 'click', function() { /* do your stuff here */ });
+</code></pre>
+
+<p>Or using event delegation:</p>
+
+<pre><code>var main = document.getElementById("main");
+Events.on(main, 'click', '#btn', function() { /* do your stuff here */ });
+</code></pre>
+
+<p>Of course this is more useful in case you want to attach the same handler on several targets.</p>
+
+<p><strong>Events.off</strong></p>
+
+<pre><code>off: function off(htmlElements, [type, ] [delegator, ] [handler] );
+
+ - {HTMLElement|HTMLCollection|NodeList} htmlElements: html elements for which the event listener will be removed
+ - {String} [type]: the name of the event
+ - {String} [delegator]
+ - {Function} [handler]
+</code></pre>
+
+<p>Remove the event listeners which match the parameters from the DOM elements passed as first argument.</p>
+
+<p>So if you want to remove the previous listeners:</p>
+
+<pre><code>Events.off(btn); // remove all the listener attached on btn
+Events.off(btn, 'click'); // remove all the click listener attached on btn
+// ...
+// it's even possible to remove only the listeners with a specific delegator, or handler, or both.
+</code></pre>
+
+<p><strong>Events.fire</strong></p>
+
+<pre><code>fire: function fire(htmlElements, type, ...data)
+
+ - {HTMLElement|HTMLCollection|NodeList} htmlElements: html elements for which simulate the event
+ - {String} type: the name of the event
+ - {Any} [data]: additional arguments for the event handler
+</code></pre>
+
+<p>Simulate the triggering of the event <code>type</code> on the elements <code>htmlElements</code>.
+It executes the handlers attached on <code>htmlElements</code>, and simulate the bubbling of the event, on their parents.</p>
+
+<p>Let's try to simulate the click on the button.</p>
+
+<pre><code>Events.fire(btn, 'click'); 
+
+// ... and we can also pass additional custom data, which will be available as arguments in the event handler function.
+
+Events.on(btn, 'click', function(evt, ...args) {
+ console.log(args); // ['foo', 'bar']
+});
+
+Events.fire(btn, 'click', 'foo', 'bar');
+</code></pre>
+
+<p><strong>Events.debug</strong></p>
+
+<pre><code>debug: function debug(htmlElement, type = "")
+
+ - {HTMLElement} htmlElement: the html element for which to get events' information
+ - {String} [type]: the name of the event
+</code></pre>
+
+<p>Get the list of the event listeners registered on a particular html element.
+If the event type is not specified it returns all the events set on that particular dom element.</p>
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/brunoscopelliti/dom-events/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/brunoscopelliti/dom-events/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/brunoscopelliti/dom-events"></a> is maintained by <a href="https://github.com/brunoscopelliti">brunoscopelliti</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+  
+  </body>
+</html>

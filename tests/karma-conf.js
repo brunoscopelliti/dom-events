@@ -1,4 +1,10 @@
-module.exports = function(config) {
+
+const path = require('path');
+
+const sourceDir = path.join(__dirname, '..', 'test');
+const testDir = path.join(__dirname, '..', 'src');
+
+module.exports = function (config) {
     config.set({
 
         // base path that will be used to resolve all patterns (eg. files, exclude)
@@ -12,21 +18,43 @@ module.exports = function(config) {
 
         // list of files / patterns to load in the browser
         files: [
-            'node_modules/sinon/pkg/sinon-1.16.1.js',
-            'tests/polyfill/*.js',
-            'tests/env.js',
-            'dist/dom-events.js',
-            'tests/importer.js',
+            // 'tests/polyfill/*.js',
+            'tests/register-qunit-extensions.js',
+            'tests/spy-setup.js',
             'tests/suite/*.js'
         ],
+
+
+        // webpack configuration
+        webpack: {
+            module: {
+                rules: [{
+                    test: /\.js$/,
+                    include:[
+                        sourceDir,
+                        testDir
+                    ],
+                    loader: 'babel-loader'
+                }]
+            },
+            resolve: {
+                modules: [
+                    'src',
+                    'node_modules'
+                ]
+            },
+        },
 
 
         // source files, that you wanna generate coverage for
         // do not include tests or libraries
         // (these files will be instrumented by Istanbul)
         preprocessors: {
-            'dist/dom-events.js': ['coverage']
+            // 'dist/dom-events.js': ['coverage']
+            'tests/**/*.js': ['webpack']
         },
+
+
 
 
         // test results reporter to use
@@ -37,8 +65,8 @@ module.exports = function(config) {
 
         // optionally, configure the reporter
         coverageReporter: {
-            type : 'html',
-            dir : './coverage/'
+            type: 'html',
+            dir: './coverage/'
         },
 
 

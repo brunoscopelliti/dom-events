@@ -1,4 +1,9 @@
 
+import sinon from 'sinon';
+
+import setup from '../utilities/dom-setup';
+import trigger from '../utilities/trigger';
+
 /**
  * @method Events.on
  * @signature Events.on(htmlElement[s], eventName, functionHandler);
@@ -13,59 +18,62 @@
  * in case the binding was made also on arguments, then the event object is the last of the arguments, [ON03].
  */
 
-QUnit.module( "dom-events.js", {
+import Events from 'index.js';
+
+
+QUnit.module('dom-events.js', {
     beforeEach: function() {
-        setup('<button id="btn"><span class="icon">★</span><span class="text">Click here</span></button>');
-        this.el = document.getElementById("btn");
+        const fakeDOM = '\
+            <button id="btn">\
+                <span class="icon">★</span>\
+                <span class="text">Click here</span>\
+            </button>';
+
+        setup(fakeDOM);
+        this.el = document.getElementById('btn');
     },
-    afterEach: function() {
-
-    }
+    afterEach: function() {}
 });
 
 
-test("[ON01] add event listener", function (assert) {
+QUnit.test('[ON01] add event listener', function (assert) {
+    const spy = sinon.spy();
 
-    var spy = sinon.spy();
+    Events.on(this.el, 'click', spy);
+    trigger(this.el, 'click');
 
-    Events.on(this.el, "click", spy);
-    trigger(this.el, "click");
+    sinon.assert.calledOnce(spy);
+    sinon.assert.calledOn(spy, this.el);
 
-    var call = spy.getCall(0);
-
-    assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
-    assert.ok(call.calledOn(this.el), "Event handler is called with the target element as 'this'");
-    _.typeEvent(call.args[0]);
-
+    const call = spy.getCall(0);
+    assert.eventObject(call.args[0]);
 });
 
-test("[ON02] listener on disabled element", function (assert) {
 
+QUnit.test('[ON02] listener on disabled element', function (assert) {
     this.el.disabled = true;
 
-    var spy = sinon.spy();
+    const spy = sinon.spy();
+    Events.on(this.el, 'click', spy);
+    trigger(this.el, 'click');
 
-    Events.on(this.el, "click", spy);
-    trigger(this.el, "click");
-
-    assert.ok(!spy.called, _.none("Event handler", spy.callCount));
-
+    sinon.assert.notCalled(spy);
+    assert.expect(0);
 });
 
-test("[ON03] add bound event listener", function (assert) {
 
-    var fakeContext = { val: 42 };
-    var spy = sinon.spy();
+QUnit.test('[ON03] add bound event listener', function (assert) {
+    const fakeContext = { val: 42 };
+    const spy = sinon.spy();
 
-    Events.on(this.el, "click", spy.bind(fakeContext, "hello", "world"));
+    Events.on(this.el, 'click', spy.bind(fakeContext, 'hello', 'world'));
+    trigger(this.el, 'click');
 
-    trigger(this.el, "click");
+    sinon.assert.calledOnce(spy);
+    sinon.assert.calledOn(spy, fakeContext);
 
-    var call = spy.getCall(0);
+    const call = spy.getCall(0);
 
-    assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
-    assert.ok(call.calledOn(fakeContext), "Event handler is called with the bound object as 'this'");
-    _.typeEvent(call.args.pop());
-    assert.equal(call.args.join(" "), "hello world", "Event handler receives the other parameters in the correct positions");
-
+    assert.eventObject(call.args.pop());
+    assert.equal(call.args.join(' '), 'hello world');
 });

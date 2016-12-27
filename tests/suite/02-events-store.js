@@ -1,10 +1,18 @@
 
-var noop = function noop() {};
+import sinon from 'sinon';
 
-QUnit.module( "dom-events.js", {
+import setup from '../utilities/dom-setup';
+
+QUnit.module('dom-events.js', {
     beforeEach: function() {
-        setup('<button id="btn"><span class="icon">★</span><span class="text">Click here</span></button>');
-        this.el = document.getElementById("btn");
+        const fakeDOM = '\
+            <button id="btn">\
+                <span class="icon">★</span>\
+                <span class="text">Click here</span>\
+            </button>';
+
+        setup(fakeDOM);
+        this.el = document.getElementById('btn');
     },
     afterEach: function() {
         Store.del(this.el);
@@ -13,28 +21,33 @@ QUnit.module( "dom-events.js", {
     }
 });
 
-test("[ES01] add/get from events store", function (assert) {
+import Store from 'event-store.js';
 
-    var addObj = Store.add(this.el, "click", null, noop);
-    var getObj = Store.get(this.el, "click")[0];
 
-    assert.ok(addObj && addObj === getObj, "add/get from events store");
-    assert.ok(addListenerSpy.calledOnce, _.one("EventTarget#addEventListener", addListenerSpy.callCount));
+QUnit.test('[ES01] add/get from events store', function(assert) {
+    const noop = function noop() {};
+    const addObj = Store.add(this.el, 'click', null, noop);
+    const getObj = Store.get(this.el, 'click')[0];
 
+    assert.ok(addObj && addObj === getObj, 'add/get from events store');
+
+    sinon.assert.calledOnce(addListenerSpy);
     addListenerSpy.reset();
 
-    var addObj2 = Store.add(this.el, "click", ".text", noop);
-    var list = Store.get(this.el, "click");
+    const addObj2 = Store.add(this.el, 'click', '.text', noop);
+    const list = Store.get(this.el, 'click');
 
-    assert.ok(list.length == 2 && !addListenerSpy.called, _.none("EventTarget#addEventListener", addListenerSpy.callCount));
+    assert.equal(list.length, 2);
 
+    sinon.assert.notCalled(addListenerSpy);
     addListenerSpy.reset();
 
-    var addObj3 = Store.add(this.el, "mouseover", ".icon", noop);
-    var all = Store.get(this.el);
+    const addObj3 = Store.add(this.el, 'mouseover', '.icon', noop);
+    const all = Store.get(this.el);
 
-    assert.ok(all.mouseover.length == 1 && addListenerSpy.calledOnce, _.one("EventTarget#addEventListener", addListenerSpy.callCount));
+    assert.equal(all.mouseover.length, 1);
 
+    sinon.assert.calledOnce(addListenerSpy);
 });
 
 
@@ -43,116 +56,106 @@ function noop2() {}
 function noop3() {}
 
 function setupDeleteTests(){
-
-    Store.add(this.el, "click", null, noop1);
-    Store.add(this.el, "click", ".add-btn", noop2);
-    Store.add(this.el, "click", ".delete-btn", noop3);
-
-    Store.add(this.el, "mouseover", null, sinon.spy());
-
-    Store.add(document, "keyup", null, sinon.spy());
-
+    Store.add(this.el, 'click', null, noop1);
+    Store.add(this.el, 'click', '.add-btn', noop2);
+    Store.add(this.el, 'click', '.delete-btn', noop3);
+    Store.add(this.el, 'mouseover', null, sinon.spy());
+    Store.add(document, 'keyup', null, sinon.spy());
 }
 
-test("[ES02] del: by event's type", function (assert) {
-
+QUnit.test('[ES02] del: by event\'s type', function(assert) {
     setupDeleteTests.call(this);
 
-    Store.del(this.el, "click");
+    Store.del(this.el, 'click');
 
-    assert.equal(Store.get(this.el, "click").length, 0, "All click handler were removed");
-    assert.ok(delListenerSpy.calledOnce, _.one("EventTarget#removeEventListener", delListenerSpy.callCount));
-    assert.equal(Store.get(this.el, "mouseover").length, 1, "Mouseover handler is untouched");
+    assert.equal(Store.get(this.el, 'click').length, 0);
+    assert.equal(Store.get(this.el, 'mouseover').length, 1);
 
+    sinon.assert.calledOnce(delListenerSpy);
     delListenerSpy.reset();
 
-    Store.del(this.el, "mouseover");
+    Store.del(this.el, 'mouseover');
 
-    _.typeEmptyObject(Store.get(this.el), "Events store for the element");
-    assert.ok(delListenerSpy.calledOnce, _.one("EventTarget#removeEventListener", delListenerSpy.callCount));
+    assert.emptyObject(Store.get(this.el));
 
+    sinon.assert.calledOnce(delListenerSpy);
 });
 
-test("[ES03] del: by event's name and delegator", function (assert) {
 
+QUnit.test('[ES03] del: by event\'s name and delegator', function(assert) {
     setupDeleteTests.call(this);
 
-    Store.del(this.el, "click", ".do-nothing");
-    assert.equal(Store.get(this.el, "click").length, 3, "Handlers are untouched");
+    Store.del(this.el, 'click', '.do-nothing');
+    assert.equal(Store.get(this.el, 'click').length, 3);
 
-    Store.del(this.el, "click", ".delete-btn");
-    assert.equal(Store.get(this.el, "click").length, 2, "The delegator's event handler was removed");
+    Store.del(this.el, 'click', '.delete-btn');
+    assert.equal(Store.get(this.el, 'click').length, 2);
 
-    assert.ok(!delListenerSpy.called, _.none("EventTarget#removeEventListener", delListenerSpy.callCount));
-
+    sinon.assert.notCalled(delListenerSpy);
 });
 
-test("[ES04] del: by event's name and specified handler", function (assert) {
 
+QUnit.test('[ES04] del: by event\'s name and specified handler', function(assert) {
     setupDeleteTests.call(this);
 
-    Store.del(this.el, "click", null, sinon.spy());
-    assert.equal(Store.get(this.el, "click").length, 3, "Handlers are untouched");
+    Store.del(this.el, 'click', null, sinon.spy());
+    assert.equal(Store.get(this.el, 'click').length, 3);
 
-    Store.del(this.el, "click", null, noop1);
-    assert.equal(Store.get(this.el, "click").length, 2, "The handler's event listener was removed");
+    Store.del(this.el, 'click', null, noop1);
+    assert.equal(Store.get(this.el, 'click').length, 2);
 
-    assert.ok(!delListenerSpy.called, _.none("EventTarget#removeEventListener", delListenerSpy.callCount));
-
+    sinon.assert.notCalled(delListenerSpy);
 });
 
-test("[ES05] del: by event's name with handler && delegator", function (assert) {
 
+QUnit.test('[ES05] del: by event\'s name with handler && delegator', function(assert) {
     setupDeleteTests.call(this);
 
-    Store.del(this.el, "click", ".do-nothing", sinon.spy());
-    Store.del(this.el, "click", ".add-btn", function() {});
-    assert.equal(Store.get(this.el, "click").length, 3, "Handlers are untouched");
+    Store.del(this.el, 'click', '.do-nothing', sinon.spy());
+    Store.del(this.el, 'click', '.add-btn', function() {});
+    assert.equal(Store.get(this.el, 'click').length, 3);
 
-    Store.del(this.el, "click", ".add-btn", noop2);
-    assert.equal(Store.get(this.el, "click").length, 2, "The handler's event listener was removed");
+    Store.del(this.el, 'click', '.add-btn', noop2);
+    assert.equal(Store.get(this.el, 'click').length, 2);
 
-    Store.del(this.el, "click", null,  noop1);
-    assert.equal(Store.get(this.el, "click").length, 1, "The handler's event listener was removed");
+    Store.del(this.el, 'click', null,  noop1);
+    assert.equal(Store.get(this.el, 'click').length, 1);
 
-    assert.ok(!delListenerSpy.called, _.none("EventTarget#removeEventListener", delListenerSpy.callCount));
+    sinon.assert.notCalled(delListenerSpy);
 
-    Store.del(this.el, "click", ".delete-btn", noop3);
+    Store.del(this.el, 'click', '.delete-btn', noop3);
 
-    assert.ok(delListenerSpy.calledOnce, _.one("EventTarget#removeEventListener", delListenerSpy.callCount));
-
+    sinon.assert.calledOnce(delListenerSpy);
 });
 
-test("[ES06] del: special listeners [A]", function (assert) {
 
-    Store.add(this.el, "mouseenter", null, sinon.spy());
-    Store.add(this.el, "mouseenter", ".removed", sinon.spy());
-    Store.add(this.el, "mouseover", null, sinon.spy());
+QUnit.test('[ES06] del: special listeners [A]', function(assert) {
+    Store.add(this.el, 'mouseenter', null, sinon.spy());
+    Store.add(this.el, 'mouseenter', '.removed', sinon.spy());
+    Store.add(this.el, 'mouseover', null, sinon.spy());
 
-    Store.del(this.el, "mouseover");
+    Store.del(this.el, 'mouseover');
 
-    var mouseoverHandlers = Store.get(this.el, "mouseover");
-    assert.equal(mouseoverHandlers.length, 1, "Only one handler was removed");
-    assert.equal(mouseoverHandlers[0].origType, "mouseenter", "Mouseover handler was removed");
+    const mouseoverHandlers = Store.get(this.el, 'mouseover');
+    assert.equal(mouseoverHandlers.length, 1);
+    assert.equal(mouseoverHandlers[0].origType, 'mouseenter');
 
-    var mouseenterHandlers = Store.get(this.el, "mouseenter");
-    assert.equal(mouseenterHandlers.length, 1, "Mouseenter handler was untouched");
-
+    const mouseenterHandlers = Store.get(this.el, 'mouseenter');
+    assert.equal(mouseenterHandlers.length, 1);
 });
 
-test("[ES07] del: special listeners [B]", function (assert) {
 
-    Store.add(this.el, "mouseenter", null, sinon.spy());
-    Store.add(this.el, "mouseenter", ".removed", sinon.spy());
-    Store.add(this.el, "mouseover", null, sinon.spy());
+QUnit.test('[ES07] del: special listeners [B]', function(assert) {
+    Store.add(this.el, 'mouseenter', null, sinon.spy());
+    Store.add(this.el, 'mouseenter', '.removed', sinon.spy());
+    Store.add(this.el, 'mouseover', null, sinon.spy());
 
-    Store.del(this.el, "mouseenter");
+    Store.del(this.el, 'mouseenter');
 
-    var mouseoverHandlers = Store.get(this.el, "mouseover");
-    assert.equal(mouseoverHandlers.length, 1, "Only one handler was removed");
-    assert.equal(mouseoverHandlers[0].origType, "mouseover", "Mouseenter handler was removed");
+    const mouseoverHandlers = Store.get(this.el, 'mouseover');
+    assert.equal(mouseoverHandlers.length, 1);
+    assert.equal(mouseoverHandlers[0].origType, 'mouseover');
 
-    var mouseenterHandlers = Store.get(this.el, "mouseenter");
-    assert.equal(mouseenterHandlers.length, 0, "Both mouseenter handlers were removed");
-
+    const mouseenterHandlers = Store.get(this.el, 'mouseenter');
+    assert.equal(mouseenterHandlers.length, 0);
 });

@@ -1,28 +1,32 @@
-//
-// Events
-// Events.js: miscellaneous test
-//
-// A good reference about the events, and their expected behaviour:
-// https://developer.mozilla.org/en-US/docs/Web/Events
-//
 
-QUnit.module( "dom-events.js", {
-    beforeEach: function() {},
-    afterEach: function() {}
-});
+import sinon from 'sinon';
+
+import $$ from '../utilities/dom-query';
+import setup from '../utilities/dom-setup';
+import trigger from '../utilities/trigger';
+
+/**
+ * Events
+ * Events.js: miscellaneous test
+ *
+ * A good reference about the events, and their expected behaviour:
+ * https://developer.mozilla.org/en-US/docs/Web/Events
+ */
+
+import Events from 'index.js';
+
+QUnit.module('dom-events.js', {});
 
 
-test("[MI01] click on checkbox", function (assert) {
-
+QUnit.test('[MI01] click on checkbox', function(assert) {
     setup('<input type="checkbox" value="pizza" id="cb" />');
 
-    var spy = sinon.spy();
-    var el = $$("#cb");
+    const spy = sinon.spy();
+    const el = $$('#cb');
 
-    Events.on(el, "click", spy);
-    trigger(el, "click");
+    Events.on(el, 'click', spy);
+    trigger(el, 'click');
 
-    assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
-    assert.ok($$("#cb")[0].checked, "Checkbox is checked");
-
+    sinon.assert.calledOnce(spy);
+    assert.ok($$('#cb')[0].checked);
 });

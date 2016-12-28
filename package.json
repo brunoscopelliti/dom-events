@@ -4,7 +4,7 @@
   "description": "A JavaScript event handler micro library.",
   "main": "src/index.js",
   "scripts": {
-    "lint": "eslint src/**.js",
+    "lint": "eslint src/**.js, tests/suite/*.js",
     "test": "karma start tests/karma-travis-conf.js",
     "lcl-test": "karma start tests/karma-conf.js"
   },

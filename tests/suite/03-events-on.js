@@ -36,7 +36,7 @@ QUnit.module('dom-events.js', {
 });
 
 
-QUnit.test('[ON01] add event listener', function (assert) {
+QUnit.test('[ON01] add event listener', function(assert) {
     const spy = sinon.spy();
 
     Events.on(this.el, 'click', spy);
@@ -50,7 +50,7 @@ QUnit.test('[ON01] add event listener', function (assert) {
 });
 
 
-QUnit.test('[ON02] listener on disabled element', function (assert) {
+QUnit.test('[ON02] listener on disabled element', function(assert) {
     this.el.disabled = true;
 
     const spy = sinon.spy();
@@ -62,7 +62,7 @@ QUnit.test('[ON02] listener on disabled element', function (assert) {
 });
 
 
-QUnit.test('[ON03] add bound event listener', function (assert) {
+QUnit.test('[ON03] add bound event listener', function(assert) {
     const fakeContext = { val: 42 };
     const spy = sinon.spy();
 

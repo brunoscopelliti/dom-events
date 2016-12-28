@@ -38,7 +38,7 @@ QUnit.module('dom-events.js', {
 });
 
 
-QUnit.test('[OF01] remove all types of listeners', function (assert) {
+QUnit.test('[OF01] remove all types of listeners', function(assert) {
     const spy1 = sinon.spy();
     const spy2 = sinon.spy();
     const spy3 = sinon.spy();
@@ -62,7 +62,7 @@ QUnit.test('[OF01] remove all types of listeners', function (assert) {
 });
 
 
-QUnit.test('[OF02] remove all types of listeners from document', function (assert) {
+QUnit.test('[OF02] remove all types of listeners from document', function(assert) {
     const spy1 = sinon.spy();
     const spy2 = sinon.spy();
 
@@ -75,7 +75,7 @@ QUnit.test('[OF02] remove all types of listeners from document', function (asser
 });
 
 
-QUnit.test('[OF03] remove all listeners of specific type', function (assert) {
+QUnit.test('[OF03] remove all listeners of specific type', function(assert) {
     const spy1 = sinon.spy();
     const spy2 = sinon.spy();
 
@@ -91,7 +91,7 @@ QUnit.test('[OF03] remove all listeners of specific type', function (assert) {
 });
 
 
-QUnit.test('[OF04] remove listener from all elements', function (assert) {
+QUnit.test('[OF04] remove listener from all elements', function(assert) {
     const spy1 = sinon.spy();
     const spy2 = sinon.spy();
 
@@ -116,7 +116,7 @@ QUnit.test('[OF04] remove listener from all elements', function (assert) {
 });
 
 
-QUnit.test('[OF05] remove listener by delegator', function (assert) {
+QUnit.test('[OF05] remove listener by delegator', function(assert) {
     const spy = sinon.spy();
     const box = $$('#box-1');
 
@@ -136,7 +136,7 @@ QUnit.test('[OF05] remove listener by delegator', function (assert) {
 });
 
 
-QUnit.test('[OF06] remove listener by handler', function (assert) {
+QUnit.test('[OF06] remove listener by handler', function(assert) {
     const spy = sinon.spy();
 
     Events.on(this.btn3, 'click', spy);
@@ -154,7 +154,7 @@ QUnit.test('[OF06] remove listener by handler', function (assert) {
     assert.expect(0);
 });
 
-QUnit.test('[OF07] remove delegate handler', function (assert) {
+QUnit.test('[OF07] remove delegate handler', function(assert) {
     const spy1 = sinon.spy();
     const spy2 = sinon.spy();
     const box = $$('#test-container');

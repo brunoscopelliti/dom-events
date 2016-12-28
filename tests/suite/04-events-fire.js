@@ -51,7 +51,7 @@ QUnit.module('dom-events.js', {
 });
 
 
-QUnit.test('[FI01] fire event', function (assert) {
+QUnit.test('[FI01] fire event', function(assert) {
     const spy = sinon.spy();
 
     Events.on(this.btn, 'click', spy);
@@ -67,7 +67,7 @@ QUnit.test('[FI01] fire event', function (assert) {
 });
 
 
-QUnit.test('[FI02] fire delegate event', function (assert) {
+QUnit.test('[FI02] fire delegate event', function(assert) {
     const spy = sinon.spy();
 
     Events.on(this.box, 'click', '#a-btn', spy);
@@ -81,7 +81,7 @@ QUnit.test('[FI02] fire delegate event', function (assert) {
 });
 
 
-QUnit.test('[FI03] fire special event (mouseenter)', function (assert) {
+QUnit.test('[FI03] fire special event (mouseenter)', function(assert) {
     const spy = sinon.spy();
 
     Events.on(this.box, 'mouseenter', '#a-btn', spy);
@@ -95,7 +95,7 @@ QUnit.test('[FI03] fire special event (mouseenter)', function (assert) {
 });
 
 
-QUnit.test('[FI04] fire special event (focus)', function (assert) {
+QUnit.test('[FI04] fire special event (focus)', function(assert) {
     const spy = sinon.spy();
 
     Events.on(this.form, 'focus', '#username', spy);
@@ -110,7 +110,7 @@ QUnit.test('[FI04] fire special event (focus)', function (assert) {
 
 // apparently in Firefox when the default action is executed
 // does not update instantaneously
-QUnit.test('[FI05] default action', function (assert) {
+QUnit.test('[FI05] default action', function(assert) {
     const spy = sinon.spy();
     const done = assert.async();
 
@@ -125,7 +125,7 @@ QUnit.test('[FI05] default action', function (assert) {
 });
 
 
-QUnit.test('[FI06] evt.stopPropagation();', function (assert) {
+QUnit.test('[FI06] evt.stopPropagation();', function(assert) {
     const blockedSpy = sinon.spy();
     const spy = sinon.spy();
 
@@ -140,7 +140,7 @@ QUnit.test('[FI06] evt.stopPropagation();', function (assert) {
 });
 
 
-QUnit.test('[FI07] evt.preventDefault();', function (assert) {
+QUnit.test('[FI07] evt.preventDefault();', function(assert) {
     const spy = sinon.spy();
 
     Events.on(this.box, 'click', spy);
@@ -155,7 +155,7 @@ QUnit.test('[FI07] evt.preventDefault();', function (assert) {
 });
 
 
-QUnit.test('[FI08] return false;', function (assert) {
+QUnit.test('[FI08] return false;', function(assert) {
     const blockedSpy = sinon.spy();
     const spy = sinon.spy();
 
@@ -172,7 +172,7 @@ QUnit.test('[FI08] return false;', function (assert) {
 });
 
 
-QUnit.test('[FI09] handler execution blocked by delegate', function (assert) {
+QUnit.test('[FI09] handler execution blocked by delegate', function(assert) {
     const blockedSpy = sinon.spy();
     const spy = sinon.spy();
 
@@ -189,7 +189,7 @@ QUnit.test('[FI09] handler execution blocked by delegate', function (assert) {
 });
 
 
-QUnit.test('[FI10] fire collateral effect click/submit', function (assert) {
+QUnit.test('[FI10] fire collateral effect click/submit', function(assert) {
     const spy = sinon.spy();
 
     Events.on(this.form, 'submit', function(evt){ spy.call(this, evt); return false; });
@@ -203,7 +203,7 @@ QUnit.test('[FI10] fire collateral effect click/submit', function (assert) {
 });
 
 
-QUnit.test('[FI11] fire collateral effect click/delegate submit', function (assert) {
+QUnit.test('[FI11] fire collateral effect click/delegate submit', function(assert) {
     const spy = sinon.spy();
     const parent = $$('#test-container');
 
@@ -218,7 +218,7 @@ QUnit.test('[FI11] fire collateral effect click/delegate submit', function (asse
 });
 
 
-QUnit.test('[FI12] fire collateral effect click/change', function (assert) {
+QUnit.test('[FI12] fire collateral effect click/change', function(assert) {
     const spy = sinon.spy();
     const radios = $$('input[name="gender"]');
     const womanLabel = $$('label[for="female"]');
@@ -235,7 +235,7 @@ QUnit.test('[FI12] fire collateral effect click/change', function (assert) {
 });
 
 
-QUnit.test('[FI13] fire collateral effect click/delegate change', function (assert) {
+QUnit.test('[FI13] fire collateral effect click/delegate change', function(assert) {
     const spy = sinon.spy();
     const womanLabel = $$('label[for="female"]');
     const womanRadio = $$('input[name="gender"][value="W"]');

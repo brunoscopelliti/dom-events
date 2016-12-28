@@ -1,72 +1,79 @@
 
-QUnit.module( "dom-events.js", {
-    beforeEach: function() {
+import sinon from 'sinon';
 
-        var fakeDOM = "\
-            <div id='box-1' class='box'>\
-                <button id='btn-1' data-val='hello'>Say <b>hello</b></button>\
-                <button id='btn-2' data-val='ciao'>Say <b>ciao</b></button>\
+import $$ from '../utilities/dom-query';
+import setup from '../utilities/dom-setup';
+import trigger from '../utilities/trigger';
+
+
+import Events from 'index.js';
+
+QUnit.module('dom-events.js', {
+    beforeEach: function() {
+        const fakeDOM = '\
+            <div id="box-1" class="box">\
+                <button id="btn-1" data-val="hello">Say <b>hello</b></button>\
+                <button id="btn-2" data-val="ciao">Say <b>ciao</b></button>\
             </div>\
-            <div id='box-2' class='box'>\
-                <button id='btn-3' data-val='thanks'>Say <b>thanks</b></button>\
-                <button id='btn-4' data-val='grazie'>Say <b>grazie</b></button>\
-            </div>";
+            <div id="box-2" class="box">\
+                <button id="btn-3" data-val="thanks">Say <b>thanks</b></button>\
+                <button id="btn-4" data-val="grazie">Say <b>grazie</b></button>\
+            </div>';
 
         setup(fakeDOM);
     },
     afterEach: function() {}
 });
 
-test("[MUL1] multiple event listeners", function (assert) {
 
-    var spy = sinon.spy();
-    var buttons = $$("button");
-    var btn1 = $$("#btn-1");
-    var btn2 = $$("#btn-2");
+QUnit.test('[MUL1] multiple event listeners', function(assert) {
+    const spy = sinon.spy();
+    const buttons = $$('button');
+    const btn1 = $$('#btn-1');
+    const btn2 = $$('#btn-2');
 
-    Events.on(buttons, "click", function(){ var val = this.dataset ? this.dataset.val : this.getAttribute("data-val"); spy(val); });
+    Events.on(buttons, 'click', function() { const val = this.dataset ? this.dataset.val : this.getAttribute('data-val'); spy(val); });
 
-    trigger(btn1, "click");
+    trigger(btn1, 'click');
 
-    assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
-    assert.equal(spy.getCall(0).args[0], "hello", "Event handler is called with the correct target element as 'this'");
-
+    sinon.assert.calledOnce(spy);
+    sinon.assert.calledWith(spy, 'hello');
     spy.reset();
 
-    trigger(btn2, "click");
+    trigger(btn2, 'click');
 
-    assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
-    assert.equal(spy.getCall(0).args[0], "ciao", "Event handler is called with the correct target element as 'this'");
+    sinon.assert.calledOnce(spy);
+    sinon.assert.calledWith(spy, 'ciao');
 
+    assert.expect(0);
 });
 
-test("[MUL2] delegate on multiple elements", function (assert) {
 
-    var spy = sinon.spy();
-    var box = $$(".box");
-    var btn1 = $$("#btn-1 b");
-    var btn2 = $$("#btn-2");
-    var btn3 = $$("#btn-3");
+QUnit.test('[MUL2] delegate on multiple elements', function(assert) {
+    const spy = sinon.spy();
+    const box = $$('.box');
+    const btn1 = $$('#btn-1 b');
+    const btn2 = $$('#btn-2');
+    const btn3 = $$('#btn-3');
 
-    Events.on(box, "click", "button", function(){ var val = this.dataset ? this.dataset.val : this.getAttribute("data-val"); spy(val); });
+    Events.on(box, 'click', 'button', function() { const val = this.dataset ? this.dataset.val : this.getAttribute('data-val'); spy(val); });
 
-    trigger(btn1, "click");
+    trigger(btn1, 'click');
 
-    assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
-    assert.equal(spy.getCall(0).args[0], "hello", "Event handler is called with the correct target element as 'this'");
-
+    sinon.assert.calledOnce(spy);
+    sinon.assert.calledWith(spy, 'hello');
     spy.reset();
 
-    trigger(btn2, "click");
+    trigger(btn2, 'click');
 
-    assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
-    assert.equal(spy.getCall(0).args[0], "ciao", "Event handler is called with the correct target element as 'this'");
-
+    sinon.assert.calledOnce(spy);
+    sinon.assert.calledWith(spy, 'ciao');
     spy.reset();
 
-    trigger(btn3, "click");
+    trigger(btn3, 'click');
 
-    assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
-    assert.equal(spy.getCall(0).args[0], "thanks", "Event handler is called with the correct target element as 'this'");
+    sinon.assert.calledOnce(spy);
+    sinon.assert.calledWith(spy, 'thanks');
 
+    assert.expect(0);
 });

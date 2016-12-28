@@ -1,100 +1,113 @@
 
-//
-// Events
-// Events.on: Test mouse movement related events
-//
-// A good reference about the events, and their expected behaviour:
-// https://developer.mozilla.org/en-US/docs/Web/Events
-//
+import sinon from 'sinon';
 
-QUnit.module( "dom-events.js", {
+import $$ from '../utilities/dom-query';
+import setup from '../utilities/dom-setup';
+import trigger from '../utilities/trigger';
+
+/**
+ * Events
+ * Events.on: Test mouse movement related events
+ *
+ * A good reference about the events, and their expected behaviour:
+ * https://developer.mozilla.org/en-US/docs/Web/Events
+ */
+
+import Events from 'index.js';
+
+QUnit.module('dom-events.js', {
     beforeEach: function() {
-
-        var fakeDOM = "\
-            <div id='box-outer' style='background: #ccc; width:250px; height:250px; position:relative; margin: 100px auto;'>\
-                <div id='box-middle' style='background: #999; width:200px; height:200px; position:absolute; top: 25px; left: 25px;'>\
-                    <div id='box-inner' style='background: #555; width:100px; height:100px; position:absolute; top: 50px; left: 50px;'></div>\
+        const fakeDOM = '\
+            <div id="box-outer" style="background: #ccc; width:250px; height:250px; position:relative; margin: 100px auto;">\
+                <div id="box-middle" style="background: #999; width:200px; height:200px; position:absolute; top: 25px; left: 25px;">\
+                    <div id="box-inner" style="background: #555; width:100px; height:100px; position:absolute; top: 50px; left: 50px;"></div>\
                 </div>\
-            </div>";
+            </div>';
 
         setup(fakeDOM);
 
-        this.outer = $$("#box-outer")[0];
-        this.middle = $$("#box-middle")[0];
-        this.inner = $$("#box-inner")[0];
+        this.outer = $$('#box-outer')[0];
+        this.middle = $$('#box-middle')[0];
+        this.inner = $$('#box-inner')[0];
     },
     afterEach: function() {}
 });
 
-test("[MOV1] mouse over/out", function (assert) {
 
-    var spyOver = sinon.spy();
-    var spyOut = sinon.spy();
+QUnit.test('[MOV1] mouse over/out', function(assert) {
+    const spyOver = sinon.spy();
+    const spyOut = sinon.spy();
 
-    Events.on(this.outer, "mouseover", spyOver);
-    Events.on(this.outer, "mouseout", spyOut);
+    Events.on(this.outer, 'mouseover', spyOver);
+    Events.on(this.outer, 'mouseout', spyOut);
 
-    trigger(this.outer, "mouseover");
-    assert.ok(spyOver.calledOnce, _.one("Mouseover event handler", spyOver.callCount));
+    trigger(this.outer, 'mouseover');
+    sinon.assert.calledOnce(spyOver);
 
-    trigger(this.outer, "mouseout");
-    assert.ok(spyOut.calledOnce, _.one("Mouseout event handler", spyOut.callCount));
+    trigger(this.outer, 'mouseout');
+    sinon.assert.calledOnce(spyOut);
 
+    assert.expect(0);
 });
 
-test("[MOV2] delegate mouse over/out", function (assert) {
 
-    var spyOver = sinon.spy();
-    var spyOut = sinon.spy();
+QUnit.test('[MOV2] delegate mouse over/out', function(assert) {
+    const spyOver = sinon.spy();
+    const spyOut = sinon.spy();
 
-    Events.on(this.outer, "mouseover", "#box-inner", spyOver);
-    Events.on(this.outer, "mouseout", "#box-inner", spyOut);
+    Events.on(this.outer, 'mouseover', '#box-inner', spyOver);
+    Events.on(this.outer, 'mouseout', '#box-inner', spyOut);
 
-    trigger(this.inner, "mouseover");
-    assert.ok(spyOver.calledOnce, _.one("Mouseover event handler", spyOver.callCount));
+    trigger(this.inner, 'mouseover');
+    sinon.assert.calledOnce(spyOver);
 
-    trigger(this.inner, "mouseout");
-    assert.ok(spyOut.calledOnce, _.one("Mouseout event handler", spyOut.callCount));
+    trigger(this.inner, 'mouseout');
+    sinon.assert.calledOnce(spyOut);
 
+    assert.expect(0);
 });
 
-test("[MOV3] mousemove", function (assert) {
 
-    var spyMove = sinon.spy();
+QUnit.test('[MOV3] mousemove', function(assert) {
+    const spyMove = sinon.spy();
 
-    Events.on(this.outer, "mousemove", spyMove);
+    Events.on(this.outer, 'mousemove', spyMove);
 
-    trigger(this.outer, "mousemove");
-    assert.ok(spyMove.calledOnce, _.one("Mousemove event handler", spyMove.callCount));
+    trigger(this.outer, 'mousemove');
+    sinon.assert.calledOnce(spyMove);
 
+    assert.expect(0);
 });
 
-test("[MOV4] delegate mousemove", function (assert) {
 
-    var spyMove = sinon.spy();
+QUnit.test('[MOV4] delegate mousemove', function(assert) {
+    const spyMove = sinon.spy();
 
-    Events.on(this.outer, "mousemove", "#box-inner", spyMove);
-    trigger(this.inner, "mousemove");
+    Events.on(this.outer, 'mousemove', '#box-inner', spyMove);
+    trigger(this.inner, 'mousemove');
 
-    assert.ok(spyMove.calledOnce, _.one("Mousemove event handler", spyMove.callCount));
+    sinon.assert.calledOnce(spyMove);
 
+    assert.expect(0);
 });
 
-test("[MOV5] mouse enter/leave", function (assert) {
 
-    var spyEnter = sinon.spy();
-    var spyLeave = sinon.spy();
+QUnit.test('[MOV5] mouse enter/leave', function(assert) {
+    const spyEnter = sinon.spy();
+    const spyLeave = sinon.spy();
 
-    Events.on(this.outer, "mouseenter", spyEnter);
-    Events.on(this.outer, "mouseleave", spyLeave);
+    Events.on(this.outer, 'mouseenter', spyEnter);
+    Events.on(this.outer, 'mouseleave', spyLeave);
 
-    trigger(this.outer, "mouseenter");
-    assert.ok(spyEnter.calledOnce, _.one("Mouseenter event handler", spyEnter.callCount));
+    trigger(this.outer, 'mouseenter');
+    sinon.assert.calledOnce(spyEnter);
 
-    trigger(this.outer, "mouseleave");
-    assert.ok(spyLeave.calledOnce, _.one("Mouseleave event handler", spyLeave.callCount));
+    trigger(this.outer, 'mouseleave');
+    sinon.assert.calledOnce(spyLeave);
 
+    assert.expect(0);
 });
+
 
 /**
  * Mouseenter & Mouseleave do not bubble up
@@ -104,34 +117,30 @@ test("[MOV5] mouse enter/leave", function (assert) {
  * enter or leave the area of the target
  */
 
-test("[MOV6] delegate mouse enter/leave", function (assert) {
+QUnit.test('[MOV6] delegate mouse enter/leave', function(assert) {
+    const spyEnter = sinon.spy();
+    const spyLeave = sinon.spy();
 
-    var spyEnter = sinon.spy();
-    var spyLeave = sinon.spy();
+    Events.on(this.outer, 'mouseenter', '#box-middle', spyEnter);
+    Events.on(this.outer, 'mouseleave', '#box-middle', spyLeave);
 
-    Events.on(this.outer, "mouseenter", "#box-middle", spyEnter);
-    Events.on(this.outer, "mouseleave", "#box-middle", spyLeave);
-
-    trigger(this.middle, "mouseover");
-
-    assert.ok(spyEnter.calledOnce, "Mouseenter event handler is fired one time");
-    assert.ok(spyEnter.calledOn(this.middle), "Event handler is called with the target element as 'this'");
-    _.typeEvent(spyEnter.getCall(0).args[0]);
+    trigger(this.middle, 'mouseover');
+    sinon.assert.calledOnce(spyEnter);
+    sinon.assert.calledOn(spyEnter, this.middle);
+    assert.eventObject(spyEnter.getCall(0).args[0]);
 
     spyEnter.reset();
 
-    trigger(this.inner, "mouseover");
-    assert.ok(!spyEnter.called, "Mouseenter event handler is not fired when the mouse is already inside the target");
+    trigger(this.inner, 'mouseover');
+    sinon.assert.notCalled(spyEnter);
 
-    trigger(this.inner, "mouseout");
-    assert.ok(!spyLeave.called, "Mouseleave event handler is not fired until the mouse exits the target");
+    trigger(this.inner, 'mouseout');
+    sinon.assert.notCalled(spyLeave);
 
     spyLeave.reset();
 
-    trigger(this.middle, "mouseout");
-    assert.ok(spyLeave.calledOnce, "Mouseleave event handler is fired one time");
-    assert.ok(spyLeave.calledOn(this.middle), "Event handler is called with the target element as 'this'");
-    _.typeEvent(spyLeave.getCall(0).args[0]);
-
+    trigger(this.middle, 'mouseout');
+    sinon.assert.calledOnce(spyLeave);
+    sinon.assert.calledOn(spyLeave, this.middle);
+    assert.eventObject(spyLeave.getCall(0).args[0]);
 });
-

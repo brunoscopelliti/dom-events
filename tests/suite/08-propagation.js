@@ -1,4 +1,10 @@
 
+import sinon from 'sinon';
+
+import $$ from '../utilities/dom-query';
+import setup from '../utilities/dom-setup';
+import trigger from '../utilities/trigger';
+
 /**
  * @method Events.on
  * @signature Events.on(htmlElement, eventName, [delegatorSelector], functionHandler);
@@ -23,20 +29,22 @@
  * Note: 'return false;' is a shortcut for event.preventDefault && event.stopPropagation, [EP09] && [EP17].
  */
 
-QUnit.module( "dom-events.js", {
+import Events from 'index.js';
+
+QUnit.module('dom-events.js', {
     beforeEach: function() {
 
-        this.stopPropagationSpy = sinon.spy(Event.prototype, "stopPropagation");
-        this.preventDefaultSpy = sinon.spy(Event.prototype, "preventDefault");
+        this.stopPropagationSpy = sinon.spy(Event.prototype, 'stopPropagation');
+        this.preventDefaultSpy = sinon.spy(Event.prototype, 'preventDefault');
 
-        var fakeDOM = "\
-            <div id='parent'>\
-                <div id='child'>\
+        const fakeDOM = '\
+            <div id="parent">\
+                <div id="child">\
                     <p>Click the following button:</p>\
-                    <button id='btn'>Child button</button>\
+                    <button id="btn">Child button</button>\
                 </div>\
-                <a href='#hash' id='anchor'>Child link</a>\
-            </div>";
+                <a href="#hash"" id="anchor">Child link</a>\
+            </div>';
 
         setup(fakeDOM);
     },
@@ -47,145 +55,151 @@ QUnit.module( "dom-events.js", {
 });
 
 
-test("[EP01] event bubbles up", function (assert) {
+QUnit.test('[EP01] event bubbles up', function(assert) {
+    const spyParent = sinon.spy();
+    const spyChild1 = sinon.spy();
+    const spyChild2 = sinon.spy();
+    const parent = $$('#parent');
+    const child = $$('#parent button');
 
-    var spyParent = sinon.spy();
-    var spyChild1 = sinon.spy();
-    var spyChild2 = sinon.spy();
-    var parent = $$("#parent");
-    var child = $$("#parent button");
+    Events.on(child, 'click', spyChild1);
+    Events.on(parent, 'click', spyParent);
+    Events.on(child, 'click', spyChild2);
+    trigger(child, 'click');
 
-    Events.on(child, "click", spyChild1);
-    Events.on(parent, "click", spyParent);
-    Events.on(child, "click", spyChild2);
-    trigger(child, "click");
-
-    assert.ok(spyParent.calledOnce && spyChild1.calledOnce && spyChild2.calledOnce, "Event handlers are fired one time");
-    assert.ok(spyChild1.calledBefore(spyChild2), "The handlers of the inner element are executed in the order of registration");
-    assert.ok(spyChild1.calledBefore(spyParent) && spyChild2.calledBefore(spyParent), "The handlers of the inner element are executed before the handler of the outer element");
-
+    sinon.assert.calledOnce(spyParent);
+    sinon.assert.calledOnce(spyChild1);
+    sinon.assert.calledOnce(spyChild2);
+    sinon.assert.callOrder(spyChild1, spyChild2, spyParent);
+    assert.expect(0);
 });
 
-test("[EP02] bubbling vs delegation [A]", function (assert) {
 
+QUnit.test('[EP02] bubbling vs delegation [A]', function(assert) {
     // handlers on the innermost html element are always executed before handlers on the outer elements
 
-    var spyNoDelegate = sinon.spy();
-    var spyDelegate = sinon.spy();
-    var mainContainer = $$("#test-container");
-    var button = $$("#parent button");
+    const spyNoDelegate = sinon.spy();
+    const spyDelegate = sinon.spy();
+    const mainContainer = $$('#test-container');
+    const button = $$('#parent button');
 
-    Events.on(mainContainer, "click", "button", spyDelegate);
-    Events.on(button, "click", spyNoDelegate);
+    Events.on(mainContainer, 'click', 'button', spyDelegate);
+    Events.on(button, 'click', spyNoDelegate);
 
-    trigger(button, "click");
+    trigger(button, 'click');
 
-    assert.ok(spyDelegate.calledOnce && spyNoDelegate.calledOnce, "Event handlers are fired one time");
-    assert.ok(spyNoDelegate.calledBefore(spyDelegate), "Handlers for the innermost element are always executed before");
-
+    sinon.assert.calledOnce(spyDelegate);
+    sinon.assert.calledOnce(spyNoDelegate);
+    sinon.assert.callOrder(spyNoDelegate, spyDelegate);
+    assert.expect(0);
 });
 
-test("[EP03] bubbling vs delegation [B]", function (assert) {
 
+QUnit.test('[EP03] bubbling vs delegation [B]', function(assert) {
     // in case the same element has both a directly bound event listener, both a delegated event listener
     // the execution of the former is always postponed to the execution of the latter;
     // the delegated event listener handler could also block the event propagation, so that the
     // directly bound event listener handler is never executed (see [EP11], [EP12]).
 
-    var spyNoDelegate = sinon.spy();
-    var spyDelegate = sinon.spy();
-    var mainContainer = $$("#test-container")[0];
-    var button = $$("#parent button");
+    const spyNoDelegate = sinon.spy();
+    const spyDelegate = sinon.spy();
+    const mainContainer = $$('#test-container')[0];
+    const button = $$('#parent button');
 
-    Events.on(mainContainer, "click", spyNoDelegate);
-    Events.on(mainContainer, "click", "button", spyDelegate);
+    Events.on(mainContainer, 'click', spyNoDelegate);
+    Events.on(mainContainer, 'click', 'button', spyDelegate);
 
-    trigger(button, "click");
+    trigger(button, 'click');
 
-    assert.ok(spyDelegate.calledOnce && spyNoDelegate.calledOnce, "Event handlers are fired one time");
-    assert.ok(spyDelegate.calledBefore(spyNoDelegate), "Delegated handler is executed before");
-
+    sinon.assert.calledOnce(spyDelegate);
+    sinon.assert.calledOnce(spyNoDelegate);
+    sinon.assert.callOrder(spyDelegate, spyNoDelegate);
+    assert.expect(0);
 });
 
-test("[EP04] delegate handlers are executed starting from the innermost element [A]", function (assert) {
 
+QUnit.test('[EP04] delegate handlers are executed starting from the innermost element [A]', function(assert) {
     // [A] target element is the same, bound elements are different
 
-    var spyTestContainer = sinon.spy();
-    var spyParent = sinon.spy();
-    var mainContainer = $$("#test-container");
-    var parent = $$("#parent");
-    var child = $$("#parent button");
+    const spyTestContainer = sinon.spy();
+    const spyParent = sinon.spy();
+    const mainContainer = $$('#test-container');
+    const parent = $$('#parent');
+    const child = $$('#parent button');
 
-    Events.on(mainContainer, "click", "button", spyTestContainer);
-    Events.on(parent, "click", "button", spyParent);
+    Events.on(mainContainer, 'click', 'button', spyTestContainer);
+    Events.on(parent, 'click', 'button', spyParent);
 
-    trigger(child, "click");
+    trigger(child, 'click');
 
-    assert.ok(spyParent.calledOnce && spyTestContainer.calledOnce, "Event handlers are fired one time");
-    assert.ok(spyParent.calledBefore(spyTestContainer), "The handler of the inner bound element is executed before the handler of the outer bound element");
-
+    sinon.assert.calledOnce(spyParent);
+    sinon.assert.calledOnce(spyTestContainer);
+    sinon.assert.callOrder(spyParent, spyTestContainer);
+    assert.expect(0);
 });
 
-test("[EP05] delegate handlers are executed starting from the innermost element [B]", function (assert) {
 
+QUnit.test('[EP05] delegate handlers are executed starting from the innermost element [B]', function(assert) {
     // [B] target elements are different, bound elements is the same
 
-    var spyParent = sinon.spy();
-    var spyChild = sinon.spy();
-    var mainContainer = $$("#test-container");
-    var parent = $$("#parent");
-    var child = $$("#parent button");
+    const spyParent = sinon.spy();
+    const spyChild = sinon.spy();
+    const mainContainer = $$('#test-container');
+    const parent = $$('#parent');
+    const child = $$('#parent button');
 
-    Events.on(mainContainer, "click", "#parent", spyParent);
-    Events.on(mainContainer, "click", "button", spyChild);
+    Events.on(mainContainer, 'click', '#parent', spyParent);
+    Events.on(mainContainer, 'click', 'button', spyChild);
 
-    trigger(child, "click");
+    trigger(child, 'click');
 
-    assert.ok(spyParent.calledOnce && spyChild.calledOnce, "Event handlers are fired one time");
-    assert.ok(spyChild.calledBefore(spyParent), "The handler of the inner element is executed before the handler of the outer element");
-
+    sinon.assert.calledOnce(spyParent);
+    sinon.assert.calledOnce(spyChild);
+    sinon.assert.callOrder(spyChild, spyParent);
+    assert.expect(0);
 });
 
-test("[EP06] delegate handlers are executed starting from the innermost element [C1]", function (assert) {
 
+QUnit.test('[EP06] delegate handlers are executed starting from the innermost element [C1]', function(assert) {
     // [C1] different bound elements, and different targets
 
-    var spyParent = sinon.spy();
-    var spyChild = sinon.spy();
-    var mainContainer = $$("#test-container");
-    var parent = $$("#parent");
-    var child = $$("#parent button");
+    const spyParent = sinon.spy();
+    const spyChild = sinon.spy();
+    const mainContainer = $$('#test-container');
+    const parent = $$('#parent');
+    const child = $$('#parent button');
 
-    Events.on(mainContainer, "click", "#parent", spyParent);
-    Events.on(parent, "click", "button", spyChild);
+    Events.on(mainContainer, 'click', '#parent', spyParent);
+    Events.on(parent, 'click', 'button', spyChild);
 
-    trigger(child, "click");
+    trigger(child, 'click');
 
-    assert.ok(spyParent.calledOnce && spyChild.calledOnce, "Event handlers are fired one time");
-    assert.ok(spyChild.calledBefore(spyParent), "The handler of the inner element is executed before the handler of the outer element");
-
+    sinon.assert.calledOnce(spyParent);
+    sinon.assert.calledOnce(spyChild);
+    sinon.assert.callOrder(spyChild, spyParent);
+    assert.expect(0);
 });
 
-test("[EP07] delegate handlers are executed starting from the innermost element [C2]", function (assert) {
 
+QUnit.test('[EP07] delegate handlers are executed starting from the innermost element [C2]', function(assert) {
     // [C2] different bound elements, and different targets
 
-    var spyParent = sinon.spy();
-    var spyChild = sinon.spy();
-    var mainContainer = $$("#test-container");
-    var parent = $$("#parent");
-    var child = $$("#child");
-    var btn = $$("#btn");
+    const spyParent = sinon.spy();
+    const spyChild = sinon.spy();
+    const mainContainer = $$('#test-container');
+    const parent = $$('#parent');
+    const child = $$('#child');
+    const btn = $$('#btn');
 
-    Events.on(mainContainer, "click", "#btn", spyParent);
-    Events.on(parent, "click", "#child", spyChild);
+    Events.on(mainContainer, 'click', '#btn', spyParent);
+    Events.on(parent, 'click', '#child', spyChild);
 
-    trigger(btn, "click");
+    trigger(btn, 'click');
 
-    assert.ok(spyParent.calledOnce && spyChild.calledOnce, "Event handlers are fired one time");
-    assert.ok(spyChild.calledBefore(spyParent), "The handler of the inner element is executed before the handler of the outer element");
-
+    sinon.assert.calledOnce(spyParent);
+    sinon.assert.calledOnce(spyChild);
+    sinon.assert.callOrder(spyChild, spyParent);
+    assert.expect(0);
 });
 
 
@@ -194,138 +208,141 @@ test("[EP07] delegate handlers are executed starting from the innermost element 
  * Stop event propagation
  */
 
-test("[EP08] stop event propagation (with event.stopPropagation method call)", function (assert) {
+QUnit.test('[EP08] stop event propagation (with event.stopPropagation method call)', function(assert) {
+    const spyParent = sinon.spy();
+    const parent = $$('#parent');
+    const child = $$('#parent button');
 
-    var spyParent = sinon.spy();
-    var parent = $$("#parent");
-    var child = $$("#parent button");
-
-    Events.on(parent, "click", spyParent);
-    Events.on(child, "click", function(evt){
+    Events.on(parent, 'click', spyParent);
+    Events.on(child, 'click', function(evt){
         evt.stopPropagation();
     });
-    trigger(child, "click");
 
-    assert.ok(this.stopPropagationSpy.calledOnce, _.one("Event#stopPropagation", this.stopPropagationSpy.callCount));
-    assert.ok(!spyParent.called, _.none("Event handler", spyParent.callCount));
+    trigger(child, 'click');
 
-
+    sinon.assert.calledOnce(this.stopPropagationSpy);
+    sinon.assert.notCalled(spyParent);
+    assert.expect(0);
 });
 
-test("[EP09] stop event propagation (with return false)", function (assert) {
 
-    var spyChild = sinon.spy();
-    var spyParent = sinon.spy();
-    var parent = $$("#parent");
-    var child = $$("#parent button");
+QUnit.test('[EP09] stop event propagation (with return false)', function(assert) {
+    const spyChild = sinon.spy();
+    const spyParent = sinon.spy();
+    const parent = $$('#parent');
+    const child = $$('#parent button');
 
-    Events.on(parent, "click", spyParent);
-    Events.on(child, "click", function(){ spyChild(); return false; });
-    trigger(child, "click");
+    Events.on(parent, 'click', spyParent);
+    Events.on(child, 'click', function(){ spyChild(); return false; });
 
-    assert.ok(spyChild.calledOnce && !spyParent.called, _.none("Event handler", spyParent.callCount));
+    trigger(child, 'click');
 
+    sinon.assert.calledOnce(spyChild);
+    sinon.assert.notCalled(spyParent);
+    assert.expect(0);
 });
+
 
 // It's possible to implement a jQuery style event.stopImmediatePropagation method;
 // However, since until now I've never had the need to use jQuery's stopImmediatePropagation,
 // I am not really interested in having this feature in dom-events.
-test("[EP10] stop event propagation has no effect once the event has reached its target", function (assert) {
+QUnit.test('[EP10] stop event propagation has no effect once the event has reached its target', function(assert) {
+    const spyOne = sinon.spy();
+    const spyTwo = sinon.spy();
+    const spyThree = sinon.spy();
+    const child = $$('#parent button');
 
-    var spyOne = sinon.spy();
-    var spyTwo = sinon.spy();
-    var spyThree = sinon.spy();
-    var child = $$("#parent button");
+    Events.on(child, 'click', function(evt) { spyOne(); evt.stopPropagation(); });
+    Events.on(child, 'click', function() { spyTwo(); return false; });
+    Events.on(child, 'click', spyThree);
 
-    Events.on(child, "click", function(evt) { spyOne(); evt.stopPropagation(); });
-    Events.on(child, "click", function() { spyTwo(); return false; });
-    Events.on(child, "click", spyThree);
+    trigger(child, 'click');
 
-    trigger(child, "click");
-
-    assert.ok(spyOne.calledOnce && spyTwo.calledOnce && spyThree.calledOnce, "Event handlers are fired one time");
-    assert.ok(spyOne.calledBefore(spyTwo) && spyTwo.calledBefore(spyThree), "The handlers are executed in the order of registration");
-
+    sinon.assert.calledOnce(spyOne);
+    sinon.assert.calledOnce(spyTwo);
+    sinon.assert.calledOnce(spyThree);
+    sinon.assert.callOrder(spyOne, spyTwo, spyThree);
+    assert.expect(0);
 });
 
-test("[EP11] delegate handler stops propagation (with event.stopPropagation)", function (assert) {
 
+QUnit.test('[EP11] delegate handler stops propagation (with event.stopPropagation)', function(assert) {
     // in this case there are both a delegate listener, both a directly bound event listener
     // on the same html element
     // check [EP03] for further info
 
-    var spyDirect = sinon.spy();
-    var mainContainer = $$("#test-container")[0];
-    var child = $$("#parent button");
+    const spyDirect = sinon.spy();
+    const mainContainer = $$('#test-container')[0];
+    const child = $$('#parent button');
 
-    Events.on(mainContainer, "click", spyDirect);
-    Events.on(mainContainer, "click", "button", function(e) {e.stopPropagation(); });
+    Events.on(mainContainer, 'click', spyDirect);
+    Events.on(mainContainer, 'click', 'button', function(e) {e.stopPropagation(); });
 
-    trigger(child, "click");
+    trigger(child, 'click');
 
-    assert.ok(this.stopPropagationSpy.calledOnce, _.one("Event#stopPropagation", this.stopPropagationSpy.callCount));
-    assert.ok(!spyDirect.called, _.none("Direct bound event handler", spyDirect.callCount));
-
+    sinon.assert.calledOnce(this.stopPropagationSpy);
+    sinon.assert.notCalled(spyDirect);
+    assert.expect(0);
 });
 
-test("[EP12] delegate handler stops propagation (with return false)", function (assert) {
 
+QUnit.test('[EP12] delegate handler stops propagation (with return false)', function(assert) {
     // in this case there are both a delegate listener, both a directly bound event listener
     // on the same html element
     // check [EP03] for further info
 
-    var spyDirect = sinon.spy();
-    var mainContainer = $$("#test-container")[0];
-    var child = $$("#parent button");
+    const spyDirect = sinon.spy();
+    const mainContainer = $$('#test-container')[0];
+    const child = $$('#parent button');
 
-    Events.on(mainContainer, "click", spyDirect);
-    Events.on(mainContainer, "click", "button", function() { return false; });
+    Events.on(mainContainer, 'click', spyDirect);
+    Events.on(mainContainer, 'click', 'button', function() { return false; });
 
-    trigger(child, "click");
+    trigger(child, 'click');
 
-    assert.ok(!spyDirect.called, _.none("Direct bound event handler", spyDirect.callCount));
-
+    sinon.assert.notCalled(spyDirect);
+    assert.expect(0);
 });
 
-test("[EP13] delegate handler stops propagation (with event.stopPropagation)", function (assert) {
 
+QUnit.test('[EP13] delegate handler stops propagation (with event.stopPropagation)', function(assert) {
     // in this case the delegate listener, and the directly bound event listener
     // are on different dom elements
     // check [EP03] for further info
 
-    var spyNoDelegate = sinon.spy();
-    var mainContainer = $$("#test-container");
-    var parent = $$("#parent");
-    var child = $$("#parent button");
+    const spyNoDelegate = sinon.spy();
+    const mainContainer = $$('#test-container');
+    const parent = $$('#parent');
+    const child = $$('#parent button');
 
-    Events.on(mainContainer, "click", spyNoDelegate);
-    Events.on(parent, "click", "button", function(evt) { evt.stopPropagation(); });
+    Events.on(mainContainer, 'click', spyNoDelegate);
+    Events.on(parent, 'click', 'button', function(evt) { evt.stopPropagation(); });
 
-    trigger(child, "click");
+    trigger(child, 'click');
 
-    assert.ok(this.stopPropagationSpy.calledOnce, _.one("Event#stopPropagation", this.stopPropagationSpy.callCount));
-    assert.ok(!spyNoDelegate.called, "When delegate handler stops propagation, bound handler is never executed");
-
+    sinon.assert.calledOnce(this.stopPropagationSpy);
+    sinon.assert.notCalled(spyNoDelegate);
+    assert.expect(0);
 });
 
-test("[EP14] delegate handler stops propagation (with return false)", function (assert) {
 
+QUnit.test('[EP14] delegate handler stops propagation (with return false)', function(assert) {
     // in this case the delegate listener, and the directly bound event listener
     // are on different dom elements
     // check [EP03] for further info
 
-    var spyNoDelegate = sinon.spy();
-    var mainContainer = $$("#test-container");
-    var parent = $$("#parent");
-    var child = $$("#parent button");
+    const spyNoDelegate = sinon.spy();
+    const mainContainer = $$('#test-container');
+    const parent = $$('#parent');
+    const child = $$('#parent button');
 
-    Events.on(mainContainer, "click", spyNoDelegate);
-    Events.on(parent, "click", "button", function() { return false; });
+    Events.on(mainContainer, 'click', spyNoDelegate);
+    Events.on(parent, 'click', 'button', function() { return false; });
 
-    trigger(child, "click");
+    trigger(child, 'click');
 
-    assert.ok(!spyNoDelegate.called, "When delegate handler return false, bound handler is never executed");
-
+    sinon.assert.notCalled(spyNoDelegate);
+    assert.expect(0);
 });
 
 
@@ -334,54 +351,49 @@ test("[EP14] delegate handler stops propagation (with return false)", function (
  * Prevent default action
  */
 
-test("[EP15] prevent default (with event.preventDefault)", function (assert) {
+QUnit.test('[EP15] prevent default (with event.preventDefault)', function(assert) {
+    const currentHash = location.hash;
+    const link = $$('#anchor');
 
-    var currentHash = location.hash;
-    var link = $$("#anchor");
+    Events.on(link, 'click', function(evt){ evt.preventDefault(); });
+    trigger(link, 'click');
 
-    Events.on(link, "click", function(evt){ evt.preventDefault(); });
-    trigger(link, "click");
-
-    assert.ok(this.preventDefaultSpy.called, _.one("Event#preventDefault", this.preventDefaultSpy.callCount));
-    assert.equal(location.hash, currentHash, "default action was blocked");
-
+    sinon.assert.calledOnce(this.preventDefaultSpy);
+    assert.equal(location.hash, currentHash);
 });
 
-test("[EP16] delegate handler prevent default (with event.preventDefault)", function (assert) {
 
-    var currentHash = location.hash;
-    var parent = $$("#parent");
-    var link = $$("#anchor");
+QUnit.test('[EP16] delegate handler prevent default (with event.preventDefault)', function(assert) {
+    const currentHash = location.hash;
+    const parent = $$('#parent');
+    const link = $$('#anchor');
 
-    Events.on(parent, "click", "#anchor", function(evt){ evt.preventDefault(); });
-    trigger(link, "click");
+    Events.on(parent, 'click', '#anchor', function(evt){ evt.preventDefault(); });
+    trigger(link, 'click');
 
-    assert.ok(this.preventDefaultSpy.called, _.one("Event#preventDefault", this.preventDefaultSpy.callCount));
-    assert.equal(location.hash, currentHash, "default action was blocked");
-
+    sinon.assert.calledOnce(this.preventDefaultSpy);
+    assert.equal(location.hash, currentHash);
 });
 
-test("[EP17] prevent default (with return false)", function (assert) {
 
-    var currentHash = location.hash;
-    var link = $$("#anchor");
+QUnit.test('[EP17] prevent default (with return false)', function(assert) {
+    const currentHash = location.hash;
+    const link = $$('#anchor');
 
-    Events.on(link, "click", function(){ return false; });
-    trigger(link, "click");
+    Events.on(link, 'click', function(){ return false; });
+    trigger(link, 'click');
 
-    assert.equal(location.hash, currentHash, "default action was blocked");
-
+    assert.equal(location.hash, currentHash);
 });
 
-test("[EP18] delegate prevent default (with return false)", function (assert) {
 
-    var currentHash = location.hash;
-    var parent = $$("#parent");
-    var link = $$("#anchor");
+QUnit.test('[EP18] delegate prevent default (with return false)', function(assert) {
+    const currentHash = location.hash;
+    const parent = $$('#parent');
+    const link = $$('#anchor');
 
-    Events.on(parent, "click", "#anchor", function(){ return false; });
-    trigger(link, "click");
+    Events.on(parent, 'click', '#anchor', function(){ return false; });
+    trigger(link, 'click');
 
-    assert.equal(location.hash, currentHash, "default action was blocked");
-
+    assert.equal(location.hash, currentHash);
 });

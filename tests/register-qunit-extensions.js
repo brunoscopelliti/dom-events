@@ -1,16 +1,23 @@
 
+function AssertionResult(result, actual, expected, message){
+    this.result = result;
+    this.actual = actual;
+    this.expected = expected;
+    this.message = message;
+}
+
 QUnit.assert.type = function(subject, expectedType, message) {
     const currentType = typeof subject;
-    const result = currentType == expectedType;
-
-    this.push(result, currentType, expectedType, message);
+    const assertionResult = new AssertionResult(currentType == expectedType, currentType, expectedType, message);
+    this.pushResult(assertionResult);
 };
 
 
 
+
 QUnit.assert.emptyObject = function(subject) {
-    const result = isEmptyObject_(subject);
-    this.push(result, JSON.stringify(subject), '{}', 'The object was expected to be empty.');
+    const assertionResult = new AssertionResult(isEmptyObject_(subject), JSON.stringify(subject), '{}', 'Object must be empty');
+    this.pushResult(assertionResult);
 };
 
 function isEmptyObject_(obj) {
@@ -32,8 +39,8 @@ function isEmptyObject_(obj) {
 
 
 QUnit.assert.eventObject = function(subject) {
-    const result = isEventObject_(subject);
-    this.push(result, JSON.stringify(subject), '[object Event]', 'Expecting an Event instance');
+    const assertionResult = new AssertionResult(isEventObject_(subject), JSON.stringify(subject), '[object Event]', 'Object must be an Event instance');
+    this.pushResult(assertionResult);
 };
 
 function isEventObject_(subject){

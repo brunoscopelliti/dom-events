@@ -1,16 +1,24 @@
 
-//
-// Events
-// Events.on: Test keyboard related events
-//
-// A good reference about the events, and their expected behaviour:
-// https://developer.mozilla.org/en-US/docs/Web/Events
-//
+import sinon from 'sinon';
 
-QUnit.module( "dom-events.js", {
+import $$ from '../utilities/dom-query';
+import setup from '../utilities/dom-setup';
+import trigger from '../utilities/trigger';
+
+/**
+ * Events
+ * Events.on: Test keyboard related events
+ *
+ * A good reference about the events, and their expected behaviour:
+ * https://developer.mozilla.org/en-US/docs/Web/Events
+ */
+
+import Events from 'index.js';
+
+QUnit.module('dom-events.js', {
     beforeEach: function() {
         setup('<input id="username" />');
-        this.field = $$("#username")[0];
+        this.field = $$('#username')[0];
     },
     afterEach: function() {
         Events.off(document);
@@ -18,30 +26,26 @@ QUnit.module( "dom-events.js", {
 });
 
 
-["keyup", "keydown", "keypress"].forEach(function(eventName, i) {
-
-    test("[KEY"+(i+1)+"] "+eventName, function (assert) {
-
-        var spy = sinon.spy();
+['keyup', 'keydown', 'keypress'].forEach(function(eventName, i) {
+    QUnit.test('[KEY'+(i+1)+'] '+eventName, function(assert) {
+        const spy = sinon.spy();
 
         Events.on(document, eventName, spy);
         trigger(document, eventName);
 
-        assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
-        assert.ok(spy.calledOn(document), "Event handler is called with the target element as 'this'");
-
+        sinon.assert.calledOnce(spy);
+        sinon.assert.calledOn(spy, document);
+        assert.expect(0);
     });
 
-    test("[KEY"+(i+2)+"] delegate "+eventName, function (assert) {
+    QUnit.test('[KEY'+(i+2)+'] delegate '+eventName, function(assert) {
+        const spy = sinon.spy();
 
-        var spy = sinon.spy();
-
-        Events.on(document, eventName, "#username", spy);
+        Events.on(document, eventName, '#username', spy);
         trigger(this.field, eventName);
 
-        assert.ok(spy.calledOnce, _.one("Event handler", spy.callCount));
-        assert.ok(spy.calledOn(this.field), "Event handler is called with the target element as 'this'");
-
+        sinon.assert.calledOnce(spy);
+        sinon.assert.calledOn(spy, this.field);
+        assert.expect(0);
     });
-
 });

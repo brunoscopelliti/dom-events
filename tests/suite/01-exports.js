@@ -17,7 +17,7 @@ import Store from 'event-store.js';
  * @test interface
  * @description module's interface conformance
  */
-QUnit.test("Events' interface", function (assert) {
+QUnit.test('Events\' interface', function(assert) {
     assert.type(Events.on, 'function', 'Events.on must be a function');
     assert.type(Events.off, 'function', 'Events.off must be a function');
     assert.type(Events.fire, 'function', 'Events.fire must be a function');
@@ -28,7 +28,7 @@ QUnit.test("Events' interface", function (assert) {
  * @test interface
  * @description module's interface conformance
  */
-QUnit.test("EventsStore's interface", function (assert) {
+QUnit.test('EventsStore\'s interface', function(assert) {
     assert.type(Store.get, 'function', 'Store.get must be a function');
     assert.type(Store.add, 'function', 'Store.add must be a function');
     assert.type(Store.del, 'function', 'Store.del must be a function');

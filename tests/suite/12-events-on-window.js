@@ -23,7 +23,8 @@ import trigger from '../utilities/trigger';
 
 import Events from 'index.js';
 
-QUnit.module('dom-events.js', {
+
+QUnit.module('Events', {
     beforeEach: function() {
         const fakeDOM = '\
             <div id="high-box" style="height: 5000px;">Hello, I am pretty high...</div>\
@@ -37,6 +38,7 @@ QUnit.module('dom-events.js', {
         Events.off(window);
     }
 });
+
 
 QUnit.test('[WIN1] window scroll', function(assert) {
     const spy = sinon.spy();

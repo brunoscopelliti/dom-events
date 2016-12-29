@@ -14,7 +14,8 @@ import trigger from '../utilities/trigger';
 
 import Events from 'index.js';
 
-QUnit.module('dom-events.js', {
+
+QUnit.module('Events', {
     beforeEach: function() {
         const fakeDOM = '\
             <input id="name" value="" />\
@@ -33,8 +34,7 @@ QUnit.module('dom-events.js', {
         this.btn2 = $$('#btn-2')[0];
         this.btn3 = $$('#btn-3')[0];
         this.btn4 = $$('#btn-4')[0];
-    },
-    afterEach: function() {}
+    }
 });
 
 
@@ -153,6 +153,7 @@ QUnit.test('[OF06] remove listener by handler', function(assert) {
 
     assert.expect(0);
 });
+
 
 QUnit.test('[OF07] remove delegate handler', function(assert) {
     const spy1 = sinon.spy();

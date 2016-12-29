@@ -14,7 +14,8 @@ import setup from '../utilities/dom-setup';
 
 import Events from 'index.js';
 
-QUnit.module('dom-events.js', {
+
+QUnit.module('Events', {
     beforeEach: function() {
         const fakeDOM = '\
             <div id="img-box">\
@@ -25,8 +26,7 @@ QUnit.module('dom-events.js', {
 
         this.box = $$('#img-box')[0];
         this.img = $$('#img-box img')[0];
-    },
-    afterEach: function() {}
+    }
 });
 
 

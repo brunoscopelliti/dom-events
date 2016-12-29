@@ -21,7 +21,7 @@ import trigger from '../utilities/trigger';
 import Events from 'index.js';
 
 
-QUnit.module('dom-events.js', {
+QUnit.module('Events', {
     beforeEach: function() {
         const fakeDOM = '\
             <button id="btn">\
@@ -31,8 +31,7 @@ QUnit.module('dom-events.js', {
 
         setup(fakeDOM);
         this.el = document.getElementById('btn');
-    },
-    afterEach: function() {}
+    }
 });
 
 

@@ -3,7 +3,6 @@ import sinon from 'sinon';
 
 import $$ from '../utilities/dom-query';
 import setup from '../utilities/dom-setup';
-import trigger from '../utilities/trigger';
 
 /**
  * @method Events.fire
@@ -19,7 +18,8 @@ import trigger from '../utilities/trigger';
 
 import Events from 'index.js';
 
-QUnit.module('dom-events.js', {
+
+QUnit.module('Events', {
     beforeEach: function() {
         const fakeDOM = '\
             <form id="form" action="#route">\

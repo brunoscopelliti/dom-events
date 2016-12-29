@@ -15,7 +15,8 @@ import trigger from '../utilities/trigger';
 
 import Events from 'index.js';
 
-QUnit.module('dom-events.js', {
+
+QUnit.module('Events', {
     beforeEach: function() {
         setup('<input id="username" />');
         this.field = $$('#username')[0];

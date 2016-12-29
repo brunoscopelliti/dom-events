@@ -15,7 +15,8 @@ import trigger from '../utilities/trigger';
 
 import Events from 'index.js';
 
-QUnit.module('dom-events.js', {
+
+QUnit.module('Events', {
     beforeEach: function() {
         const fakeDOM = '\
             <div id="parent">\
@@ -28,8 +29,7 @@ QUnit.module('dom-events.js', {
 
         this.box = $$('#parent')[0];
         this.btn = $$('#child')[0];
-    },
-    afterEach: function() {}
+    }
 });
 
 

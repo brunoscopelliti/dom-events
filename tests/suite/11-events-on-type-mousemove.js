@@ -15,7 +15,8 @@ import trigger from '../utilities/trigger';
 
 import Events from 'index.js';
 
-QUnit.module('dom-events.js', {
+
+QUnit.module('Events', {
     beforeEach: function() {
         const fakeDOM = '\
             <div id="box-outer" style="background: #ccc; width:250px; height:250px; position:relative; margin: 100px auto;">\
@@ -29,8 +30,7 @@ QUnit.module('dom-events.js', {
         this.outer = $$('#box-outer')[0];
         this.middle = $$('#box-middle')[0];
         this.inner = $$('#box-inner')[0];
-    },
-    afterEach: function() {}
+    }
 });
 
 

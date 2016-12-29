@@ -5,10 +5,10 @@ import $$ from '../utilities/dom-query';
 import setup from '../utilities/dom-setup';
 import trigger from '../utilities/trigger';
 
-
 import Events from 'index.js';
 
-QUnit.module('dom-events.js', {
+
+QUnit.module('Events', {
     beforeEach: function() {
         const fakeDOM = '\
             <div id="box-1" class="box">\
@@ -21,8 +21,7 @@ QUnit.module('dom-events.js', {
             </div>';
 
         setup(fakeDOM);
-    },
-    afterEach: function() {}
+    }
 });
 
 

@@ -22,7 +22,8 @@ import trigger from '../utilities/trigger';
 
 import Events from 'index.js';
 
-QUnit.module('dom-events.js', {
+
+QUnit.module('Events', {
     beforeEach: function() {
         const fakeDOM = '\
             <ul id="list" class="list-level-1">\
@@ -55,8 +56,7 @@ QUnit.module('dom-events.js', {
             </p>';
 
         setup(fakeDOM);
-    },
-    afterEach: function() {}
+    }
 });
 
 

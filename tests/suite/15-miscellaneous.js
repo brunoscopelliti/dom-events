@@ -15,7 +15,8 @@ import trigger from '../utilities/trigger';
 
 import Events from 'index.js';
 
-QUnit.module('dom-events.js', {});
+
+QUnit.module('Events');
 
 
 QUnit.test('[MI01] click on checkbox', function(assert) {

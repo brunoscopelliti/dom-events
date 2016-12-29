@@ -31,7 +31,8 @@ import trigger from '../utilities/trigger';
 
 import Events from 'index.js';
 
-QUnit.module('dom-events.js', {
+
+QUnit.module('Events', {
     beforeEach: function() {
 
         this.stopPropagationSpy = sinon.spy(Event.prototype, 'stopPropagation');
@@ -145,7 +146,6 @@ QUnit.test('[EP05] delegate handlers are executed starting from the innermost el
     const spyParent = sinon.spy();
     const spyChild = sinon.spy();
     const mainContainer = $$('#test-container');
-    const parent = $$('#parent');
     const child = $$('#parent button');
 
     Events.on(mainContainer, 'click', '#parent', spyParent);
@@ -188,7 +188,6 @@ QUnit.test('[EP07] delegate handlers are executed starting from the innermost el
     const spyChild = sinon.spy();
     const mainContainer = $$('#test-container');
     const parent = $$('#parent');
-    const child = $$('#child');
     const btn = $$('#btn');
 
     Events.on(mainContainer, 'click', '#btn', spyParent);
@@ -201,7 +200,6 @@ QUnit.test('[EP07] delegate handlers are executed starting from the innermost el
     sinon.assert.callOrder(spyChild, spyParent);
     assert.expect(0);
 });
-
 
 
 /**
@@ -344,7 +342,6 @@ QUnit.test('[EP14] delegate handler stops propagation (with return false)', func
     sinon.assert.notCalled(spyNoDelegate);
     assert.expect(0);
 });
-
 
 
 /**

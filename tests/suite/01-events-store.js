@@ -3,7 +3,28 @@ import sinon from 'sinon';
 
 import setup from '../utilities/dom-setup';
 
-QUnit.module('dom-events.js', {
+/**
+ * @name Store
+ * @description
+ * Stores the event listeners set, and exposes methods to modify the collection.
+ */
+import Store from 'event-store.js';
+
+
+QUnit.module('EventsStore');
+
+
+QUnit.test('interface', function(assert) {
+    assert.type(Store.get, 'function', 'Store.get must be a function');
+    assert.type(Store.add, 'function', 'Store.add must be a function');
+    assert.type(Store.del, 'function', 'Store.del must be a function');
+    assert.type(Store.run, 'function', 'Store.run must be a function');
+});
+
+
+
+
+QUnit.module('EventsStore functionalities', {
     beforeEach: function() {
         const fakeDOM = '\
             <button id="btn">\
@@ -16,12 +37,10 @@ QUnit.module('dom-events.js', {
     },
     afterEach: function() {
         Store.del(this.el);
-        addListenerSpy.reset();
-        delListenerSpy.reset();
+        window.addListenerSpy.reset();
+        window.delListenerSpy.reset();
     }
 });
-
-import Store from 'event-store.js';
 
 
 QUnit.test('[ES01] add/get from events store', function(assert) {
@@ -31,31 +50,31 @@ QUnit.test('[ES01] add/get from events store', function(assert) {
 
     assert.ok(addObj && addObj === getObj, 'add/get from events store');
 
-    sinon.assert.calledOnce(addListenerSpy);
-    addListenerSpy.reset();
+    sinon.assert.calledOnce(window.addListenerSpy);
+    window.addListenerSpy.reset();
 
-    const addObj2 = Store.add(this.el, 'click', '.text', noop);
+    Store.add(this.el, 'click', '.text', noop);
     const list = Store.get(this.el, 'click');
 
     assert.equal(list.length, 2);
 
-    sinon.assert.notCalled(addListenerSpy);
-    addListenerSpy.reset();
+    sinon.assert.notCalled(window.addListenerSpy);
+    window.addListenerSpy.reset();
 
-    const addObj3 = Store.add(this.el, 'mouseover', '.icon', noop);
+    Store.add(this.el, 'mouseover', '.icon', noop);
     const all = Store.get(this.el);
 
     assert.equal(all.mouseover.length, 1);
 
-    sinon.assert.calledOnce(addListenerSpy);
+    sinon.assert.calledOnce(window.addListenerSpy);
 });
 
 
-function noop1() {}
-function noop2() {}
-function noop3() {}
+const noop1 = () => {};
+const noop2 = () => {};
+const noop3 = () => {};
 
-function setupDeleteTests(){
+function setupDeleteTests() {
     Store.add(this.el, 'click', null, noop1);
     Store.add(this.el, 'click', '.add-btn', noop2);
     Store.add(this.el, 'click', '.delete-btn', noop3);
@@ -71,14 +90,14 @@ QUnit.test('[ES02] del: by event\'s type', function(assert) {
     assert.equal(Store.get(this.el, 'click').length, 0);
     assert.equal(Store.get(this.el, 'mouseover').length, 1);
 
-    sinon.assert.calledOnce(delListenerSpy);
-    delListenerSpy.reset();
+    sinon.assert.calledOnce(window.delListenerSpy);
+    window.delListenerSpy.reset();
 
     Store.del(this.el, 'mouseover');
 
     assert.emptyObject(Store.get(this.el));
 
-    sinon.assert.calledOnce(delListenerSpy);
+    sinon.assert.calledOnce(window.delListenerSpy);
 });
 
 
@@ -91,7 +110,7 @@ QUnit.test('[ES03] del: by event\'s name and delegator', function(assert) {
     Store.del(this.el, 'click', '.delete-btn');
     assert.equal(Store.get(this.el, 'click').length, 2);
 
-    sinon.assert.notCalled(delListenerSpy);
+    sinon.assert.notCalled(window.delListenerSpy);
 });
 
 
@@ -104,7 +123,7 @@ QUnit.test('[ES04] del: by event\'s name and specified handler', function(assert
     Store.del(this.el, 'click', null, noop1);
     assert.equal(Store.get(this.el, 'click').length, 2);
 
-    sinon.assert.notCalled(delListenerSpy);
+    sinon.assert.notCalled(window.delListenerSpy);
 });
 
 
@@ -121,11 +140,11 @@ QUnit.test('[ES05] del: by event\'s name with handler && delegator', function(as
     Store.del(this.el, 'click', null,  noop1);
     assert.equal(Store.get(this.el, 'click').length, 1);
 
-    sinon.assert.notCalled(delListenerSpy);
+    sinon.assert.notCalled(window.delListenerSpy);
 
     Store.del(this.el, 'click', '.delete-btn', noop3);
 
-    sinon.assert.calledOnce(delListenerSpy);
+    sinon.assert.calledOnce(window.delListenerSpy);
 });
 
 

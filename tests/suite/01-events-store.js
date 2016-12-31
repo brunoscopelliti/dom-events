@@ -1,7 +1,7 @@
 
-import sinon from 'sinon';
-
 import setup from '../utilities/dom-setup';
+
+import { addListenerSpy, delListenerSpy } from '../listener-spies';
 
 /**
  * @name Store
@@ -37,8 +37,8 @@ QUnit.module('EventsStore functionalities', {
     },
     afterEach: function() {
         Store.del(this.el);
-        window.addListenerSpy.reset();
-        window.delListenerSpy.reset();
+        addListenerSpy.reset();
+        delListenerSpy.reset();
     }
 });
 
@@ -50,23 +50,23 @@ QUnit.test('[ES01] add/get from events store', function(assert) {
 
     assert.ok(addObj && addObj === getObj, 'add/get from events store');
 
-    sinon.assert.calledOnce(window.addListenerSpy);
-    window.addListenerSpy.reset();
+    sinon.assert.calledOnce(addListenerSpy);
+    addListenerSpy.reset();
 
     Store.add(this.el, 'click', '.text', noop);
     const list = Store.get(this.el, 'click');
 
     assert.equal(list.length, 2);
 
-    sinon.assert.notCalled(window.addListenerSpy);
-    window.addListenerSpy.reset();
+    sinon.assert.notCalled(addListenerSpy);
+    addListenerSpy.reset();
 
     Store.add(this.el, 'mouseover', '.icon', noop);
     const all = Store.get(this.el);
 
     assert.equal(all.mouseover.length, 1);
 
-    sinon.assert.calledOnce(window.addListenerSpy);
+    sinon.assert.calledOnce(addListenerSpy);
 });
 
 
@@ -90,14 +90,14 @@ QUnit.test('[ES02] del: by event\'s type', function(assert) {
     assert.equal(Store.get(this.el, 'click').length, 0);
     assert.equal(Store.get(this.el, 'mouseover').length, 1);
 
-    sinon.assert.calledOnce(window.delListenerSpy);
-    window.delListenerSpy.reset();
+    sinon.assert.calledOnce(delListenerSpy);
+    delListenerSpy.reset();
 
     Store.del(this.el, 'mouseover');
 
     assert.emptyObject(Store.get(this.el));
 
-    sinon.assert.calledOnce(window.delListenerSpy);
+    sinon.assert.calledOnce(delListenerSpy);
 });
 
 
@@ -110,7 +110,7 @@ QUnit.test('[ES03] del: by event\'s name and delegator', function(assert) {
     Store.del(this.el, 'click', '.delete-btn');
     assert.equal(Store.get(this.el, 'click').length, 2);
 
-    sinon.assert.notCalled(window.delListenerSpy);
+    sinon.assert.notCalled(delListenerSpy);
 });
 
 
@@ -123,7 +123,7 @@ QUnit.test('[ES04] del: by event\'s name and specified handler', function(assert
     Store.del(this.el, 'click', null, noop1);
     assert.equal(Store.get(this.el, 'click').length, 2);
 
-    sinon.assert.notCalled(window.delListenerSpy);
+    sinon.assert.notCalled(delListenerSpy);
 });
 
 
@@ -140,11 +140,11 @@ QUnit.test('[ES05] del: by event\'s name with handler && delegator', function(as
     Store.del(this.el, 'click', null,  noop1);
     assert.equal(Store.get(this.el, 'click').length, 1);
 
-    sinon.assert.notCalled(window.delListenerSpy);
+    sinon.assert.notCalled(delListenerSpy);
 
     Store.del(this.el, 'click', '.delete-btn', noop3);
 
-    sinon.assert.calledOnce(window.delListenerSpy);
+    sinon.assert.calledOnce(delListenerSpy);
 });
 
 

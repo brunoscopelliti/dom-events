@@ -1,6 +1,4 @@
 
-import sinon from 'sinon';
-
 import $$ from '../utilities/dom-query';
 import setup from '../utilities/dom-setup';
 

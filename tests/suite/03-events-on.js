@@ -1,6 +1,4 @@
 
-import sinon from 'sinon';
-
 import setup from '../utilities/dom-setup';
 import trigger from '../utilities/trigger';
 

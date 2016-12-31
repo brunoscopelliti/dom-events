@@ -1,27 +1,24 @@
 
 const path = require('path');
 
-const sourceDir = path.join(__dirname, '..', 'test');
-const testDir = path.join(__dirname, '..', 'src');
+const sourceDir = path.join(__dirname, 'src');
+const testDir = path.join(__dirname, 'tests');
 
 module.exports = function (config) {
     config.set({
 
         // base path that will be used to resolve all patterns (eg. files, exclude)
-        basePath: '../',
+        basePath: '',
 
 
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-        frameworks: ['qunit'],
+        frameworks: ['qunit', 'sinon'],
 
 
         // list of files / patterns to load in the browser
         files: [
-            // 'tests/polyfill/*.js',
-            'tests/register-qunit-extensions.js',
-            'tests/spy-setup.js',
-            'tests/suite/*.js'
+            'tests/test-suite.js'
         ],
 
 
@@ -42,7 +39,7 @@ module.exports = function (config) {
                     'src',
                     'node_modules'
                 ]
-            },
+            }
         },
 
 
@@ -51,10 +48,8 @@ module.exports = function (config) {
         // (these files will be instrumented by Istanbul)
         preprocessors: {
             // 'dist/dom-events.js': ['coverage']
-            'tests/**/*.js': ['webpack']
+            'tests/test-suite.js': ['webpack'],
         },
-
-
 
 
         // test results reporter to use

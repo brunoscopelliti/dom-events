@@ -1,8 +1,11 @@
-/.idea
-/node_modules
-/jspm_packages
-/coverage
-/doc
-/tests/sauce.json
+.idea
+.vscode
+.DS_Store
+node_modules
+coverage
+doc
+
+npm-debug.log
+sauce.json
 
 *.tmp.*

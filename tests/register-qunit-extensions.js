@@ -6,6 +6,7 @@ function AssertionResult(result, actual, expected, message){
     this.message = message;
 }
 
+
 QUnit.assert.type = function(subject, expectedType, message) {
     const currentType = typeof subject;
     const assertionResult = new AssertionResult(currentType == expectedType, currentType, expectedType, message);
@@ -14,13 +15,12 @@ QUnit.assert.type = function(subject, expectedType, message) {
 
 
 
-
 QUnit.assert.emptyObject = function(subject) {
     const assertionResult = new AssertionResult(isEmptyObject_(subject), JSON.stringify(subject), '{}', 'Object must be empty');
     this.pushResult(assertionResult);
 };
 
-function isEmptyObject_(obj) {
+const isEmptyObject_ = (obj) => {
     if (!obj || typeof obj != 'object'){
         return false;
     }
@@ -36,22 +36,16 @@ function isEmptyObject_(obj) {
 
 
 
-
-
 QUnit.assert.eventObject = function(subject) {
     const assertionResult = new AssertionResult(isEventObject_(subject), JSON.stringify(subject), '[object Event]', 'Object must be an Event instance');
     this.pushResult(assertionResult);
 };
 
-function isEventObject_(subject){
+const isEventObject_ = (subject) => {
     return subject.originalEvent instanceof Event ||
         duckCheck_(subject, ['currentTarget', 'target', 'type']);
 }
 
-function duckCheck_(subject, props){
-    return props.every(function(prop) {
-        return typeof subject[prop] != 'undefined';
-    });
-}
+const duckCheck_ = (subject, props) => props.every((prop) => !isUndefined(subject[prop]));
 
-
+const isUndefined = (val) => typeof val == 'undefined';

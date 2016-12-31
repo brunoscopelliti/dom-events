@@ -1,9 +1,9 @@
 
-import sinon from 'sinon';
-
 import $$ from '../utilities/dom-query';
 import setup from '../utilities/dom-setup';
 import trigger from '../utilities/trigger';
+
+import { addListenerSpy, delListenerSpy } from '../listener-spies';
 
 /**
  * Events
@@ -51,8 +51,8 @@ QUnit.module('Events', {
     afterEach: function() {
         Events.off(window);
         Events.off(document);
-        window.addListenerSpy.reset();
-        window.delListenerSpy.reset();
+        addListenerSpy.reset();
+        delListenerSpy.reset();
     }
 });
 
@@ -176,7 +176,7 @@ QUnit.skip('[FRM7] delegate focus/blur', function(assert) {
 
 QUnit.skip('[FRM8] delegate focus multiple times', function(assert) {
     const spy = sinon.spy();
-    const addDocListenerSpy = window.addListenerSpy;
+    const addDocListenerSpy = addListenerSpy;
 
     const password = $$('#password');
 
@@ -197,7 +197,7 @@ QUnit.skip('[FRM8] delegate focus multiple times', function(assert) {
 
 QUnit.test('[FRM9] remove focus/blur', function(assert) {
     const spy = sinon.spy();
-    const delDocListenerSpy = window.delListenerSpy;
+    const delDocListenerSpy = delListenerSpy;
 
     const username = $$('#username');
 

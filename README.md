@@ -1,17 +1,11 @@
-A JavaScript delegation event micro library.
-
 ## about
 
-dom-events (dom-events-delegation on npm) is written as an ECMAScript2015 module, and uses ECMAScript2015 features such destructuring, default values, weak map; it's possible to use in the browser today through the combo jspm package loader and babeljs.
-
-When the module is transpiled (with some polyfill installed such as `Array.from`, `Symbol`, `Weakmap`), it proved to work until IE10 (never tested with IE9). 
-
-In case you need another module format there are several projects which can do automatically the conversion.
+`dom-events` ([dom-events-delegation](https://www.npmjs.com/package/dom-events-delegation) on npm) is A JavaScript delegation event micro library.
 
 ## install
 
 ```
-npm install --save dom-events-delegation
+npm i -S dom-events-delegation
 ```
 
 ## CI report

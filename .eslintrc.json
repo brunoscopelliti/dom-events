@@ -4,6 +4,9 @@
         "qunit": true,
         "es6": true
     },
+    "globals": {
+        "sinon": true
+    },
     "extends": "eslint:recommended",
     "parserOptions": {
         "sourceType": "module"

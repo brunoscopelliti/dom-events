@@ -16,37 +16,37 @@ const customLaunchers = {
         browserName: 'chrome',
         platform: 'windows 8'
     },
-    // 'SL_Firefox': {
-    //     base: 'SauceLabs',
-    //     browserName: 'firefox',
-    //     platform: 'linux'
-    // },
-    // 'SL_Safari': {
-    //     base: 'SauceLabs',
-    //     browserName: 'safari',
-    //     version: '10.0',
-    //     platform: 'OS X 10.12'
-    // },
-    // 'SL_Edge': {
-    //     base: 'SauceLabs',
-    //     browserName: 'MicrosoftEdge',
-    //     version: '14.14393',
-    //     platform: 'Windows 10'
-    // },
-    // 'SL_IE11': {
-    //     base: 'SauceLabs',
-    //     browserName: 'internet explorer',
-    //     version: '11.0',
-    //     platform: 'Windows 8.1'
-    // },
-    // 'SL_Iphone': {
-    //     base: 'SauceLabs',
-    //     browserName: 'iphone',
-    //     deviceName: 'iPhone 6',
-    //     deviceOrientation: 'portrait',
-    //     version: '9.0',
-    //     platform: 'OS X 10.10'
-    // }
+    'SL_Firefox': {
+        base: 'SauceLabs',
+        browserName: 'firefox',
+        platform: 'linux'
+    },
+    'SL_Safari': {
+        base: 'SauceLabs',
+        browserName: 'safari',
+        version: '10.0',
+        platform: 'OS X 10.12'
+    },
+    'SL_Edge': {
+        base: 'SauceLabs',
+        browserName: 'MicrosoftEdge',
+        version: '14.14393',
+        platform: 'Windows 10'
+    },
+    'SL_IE11': {
+        base: 'SauceLabs',
+        browserName: 'internet explorer',
+        version: '11.0',
+        platform: 'Windows 8.1'
+    },
+    'SL_Iphone': {
+        base: 'SauceLabs',
+        browserName: 'iphone',
+        deviceName: 'iPhone 6',
+        deviceOrientation: 'portrait',
+        version: '9.0',
+        platform: 'OS X 10.10'
+    }
 };
 
 

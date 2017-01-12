@@ -47,7 +47,6 @@ module.exports = function (config) {
         // do not include tests or libraries
         // (these files will be instrumented by Istanbul)
         preprocessors: {
-            // 'dist/dom-events.js': ['coverage']
             'tests/test-suite.js': ['webpack'],
         },
 
